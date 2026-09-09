@@ -45,29 +45,57 @@ export default function Menu({ categories, shopName, tagline, phone }: Props) {
   }, [categories, query]);
 
   // Highlight the chip for whichever section is under the header.
+  //
+  // Done by measuring on scroll rather than with an IntersectionObserver: at
+  // the very top the hero fills the detection band and at the very bottom the
+  // last section can never reach it, so an observer leaves the chips showing a
+  // stale category at both ends of the page.
   useEffect(() => {
     if (searching) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const onScreen = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
-        if (!onScreen) return;
+    let frame = 0;
 
-        const slug = onScreen.target.getAttribute("data-slug");
-        if (!slug) return;
-        if (jumpingTo.current && jumpingTo.current !== slug) return;
-        jumpingTo.current = null;
-        setActiveSlug(slug);
-      },
-      // Top band of the viewport, just below the sticky header.
-      { rootMargin: "-120px 0px -65% 0px", threshold: 0 },
-    );
+    function update() {
+      frame = 0;
+      if (visible.length === 0) return;
 
-    sectionRefs.current.forEach((node) => observer.observe(node));
-    return () => observer.disconnect();
-  }, [searching, visible.length]);
+      // The line just under the sticky header — the section crossing it wins.
+      const line = 140;
+      let current = visible[0].slug;
+
+      for (const category of visible) {
+        const node = sectionRefs.current.get(category.slug);
+        if (!node) continue;
+        if (node.getBoundingClientRect().top > line) break;
+        current = category.slug;
+      }
+
+      // The final section is often too short to reach the line, so once the
+      // page is scrolled to the bottom it is the one being looked at.
+      const atBottom =
+        window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+      if (atBottom) current = visible[visible.length - 1].slug;
+
+      // Ignore readings taken mid-jump, or the chips flicker on the way past.
+      if (jumpingTo.current && jumpingTo.current !== current) return;
+      jumpingTo.current = null;
+      setActiveSlug(current);
+    }
+
+    function onScroll() {
+      if (!frame) frame = requestAnimationFrame(update);
+    }
+
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, [searching, visible]);
 
   // Keep the active chip in view on the rail as you scroll the page.
   useEffect(() => {
