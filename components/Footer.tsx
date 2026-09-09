@@ -6,6 +6,7 @@ type Props = {
   mapUrl: string;
   phone: string;
   whatsapp: string;
+  credit: { name: string; whatsapp: string };
 };
 
 /**
@@ -15,9 +16,23 @@ type Props = {
  * nobody can scan a QR with the screen showing it. These links open the map,
  * the dialler and WhatsApp directly, and the address is there to read or copy.
  */
-export default function Footer({ shopName, address, mapUrl, phone, whatsapp }: Props) {
+export default function Footer({
+  shopName,
+  address,
+  mapUrl,
+  phone,
+  whatsapp,
+  credit,
+}: Props) {
   const tel = telHref(phone);
   const wa = whatsappHref(whatsapp || phone, `Hi ${shopName}, I saw your menu.`);
+
+  // The builder's credit. Quiet by design — it belongs to the shop's page, so
+  // it sits below the shop's own details and never competes with them.
+  const creditWa = whatsappHref(
+    credit.whatsapp,
+    `Hi ${credit.name}, I saw the ${shopName} menu page you built.`,
+  );
 
   return (
     <footer className="mt-14 border-t border-[var(--line)] px-5 pb-10 pt-8 text-center">
@@ -70,6 +85,24 @@ export default function Footer({ shopName, address, mapUrl, phone, whatsapp }: P
       <p className="mt-7 text-xs text-[var(--muted)]">
         Prices are inclusive of taxes and may change without notice.
       </p>
+
+      {credit.name && (
+        <p className="mx-auto mt-6 max-w-xs border-t border-[var(--line)] pt-5 text-[11px] leading-relaxed text-[var(--muted)]">
+          Page created by{" "}
+          {creditWa ? (
+            <a
+              href={creditWa}
+              target="_blank"
+              rel="noreferrer"
+              className="font-semibold text-[var(--accent)] underline decoration-[var(--accent)]/40 underline-offset-2"
+            >
+              {credit.name}
+            </a>
+          ) : (
+            <span className="font-semibold text-[var(--text)]">{credit.name}</span>
+          )}
+        </p>
+      )}
     </footer>
   );
 }

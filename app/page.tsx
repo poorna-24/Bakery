@@ -63,6 +63,10 @@ export default async function MenuPage() {
       mapUrl={process.env.NEXT_PUBLIC_SHOP_MAP_URL ?? ""}
       phone={process.env.NEXT_PUBLIC_SHOP_PHONE ?? ""}
       whatsapp={process.env.NEXT_PUBLIC_SHOP_WHATSAPP ?? ""}
+      credit={{
+        name: process.env.NEXT_PUBLIC_CREDIT_NAME ?? "",
+        whatsapp: process.env.NEXT_PUBLIC_CREDIT_WHATSAPP ?? "",
+      }}
       appearance={appearance}
     />
   );

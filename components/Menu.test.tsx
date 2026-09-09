@@ -76,6 +76,7 @@ function renderMenu(overrides: Partial<React.ComponentProps<typeof Menu>> = {}) 
       mapUrl="https://maps.example/shop"
       phone=""
       whatsapp=""
+      credit={{ name: "", whatsapp: "" }}
       appearance={DEFAULT_APPEARANCE}
       {...overrides}
     />,
@@ -247,6 +248,41 @@ describe("the footer", () => {
     renderMenu();
     expect(screen.queryByRole("link", { name: /whatsapp/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /call/i })).not.toBeInTheDocument();
+  });
+});
+
+describe("the builder credit", () => {
+  it("is hidden when no name is configured", () => {
+    renderMenu();
+    expect(screen.queryByText(/page created by/i)).not.toBeInTheDocument();
+  });
+
+  it("names the builder and links to their WhatsApp", () => {
+    renderMenu({ credit: { name: "Poorna Chander Terala", whatsapp: "+918099057599" } });
+
+    expect(screen.getByText(/page created by/i)).toBeInTheDocument();
+    const link = screen.getByRole("link", { name: "Poorna Chander Terala" });
+    expect(link.getAttribute("href")).toContain("https://wa.me/918099057599");
+  });
+
+  it("shows the name as plain text when no number is given", () => {
+    renderMenu({ credit: { name: "Poorna Chander Terala", whatsapp: "" } });
+
+    expect(screen.getByText("Poorna Chander Terala")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Poorna Chander Terala" })).not.toBeInTheDocument();
+  });
+
+  it("does not shout over the shop's own contact buttons", () => {
+    // The shop's WhatsApp button and the credit link must stay distinguishable.
+    renderMenu({
+      whatsapp: "+917666093143",
+      credit: { name: "Poorna Chander Terala", whatsapp: "+918099057599" },
+    });
+
+    const shopLink = screen.getByRole("link", { name: /message on whatsapp/i });
+    const creditLink = screen.getByRole("link", { name: "Poorna Chander Terala" });
+    expect(shopLink.getAttribute("href")).toContain("917666093143");
+    expect(creditLink.getAttribute("href")).toContain("918099057599");
   });
 });
 

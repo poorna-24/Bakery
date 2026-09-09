@@ -17,6 +17,7 @@ type Props = {
   mapUrl: string;
   phone: string;
   whatsapp: string;
+  credit: { name: string; whatsapp: string };
   appearance: Appearance;
 };
 
@@ -28,6 +29,7 @@ export default function Menu({
   mapUrl,
   phone,
   whatsapp,
+  credit,
   appearance,
 }: Props) {
   const [query, setQuery] = useState("");
@@ -303,6 +305,7 @@ export default function Menu({
         mapUrl={mapUrl}
         phone={phone}
         whatsapp={whatsapp}
+        credit={credit}
       />
 
       {selected && (
