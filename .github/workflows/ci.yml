@@ -1,0 +1,101 @@
+name: CI
+
+# Runs on every pull request and on main. Make "verify" and "build" required
+# checks in the branch protection rule and a pull request cannot be merged
+# until both are green.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# A new push to the same branch makes the previous run pointless.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Prisma needs a datasource to generate a client. Nothing here talks to a
+  # real database, so a throwaway SQLite file is enough.
+  DATABASE_URL: "file:./ci.db"
+
+jobs:
+  verify:
+    name: Lint, types and tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Tests with coverage
+        run: npm run test:coverage
+
+      # Coverage thresholds live in vitest.config.ts and fail the step above.
+      # This just puts the numbers where a reviewer can see them.
+      - name: Coverage summary
+        if: always()
+        run: |
+          if [ -f coverage/coverage-summary.json ]; then
+            node -e 'const t=require("./coverage/coverage-summary.json").total;let o="| Metric | Covered | Count |\n|---|---|---|\n";["statements","branches","functions","lines"].forEach(function(k){o+="| "+k+" | "+t[k].pct+"% | "+t[k].covered+"/"+t[k].total+" |\n"});process.stdout.write(o)' >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 14
+
+  build:
+    name: Production build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Create the schema
+        run: npx prisma db push --skip-generate
+
+      - name: Build
+        run: npx next build
+
+  secrets:
+    name: No secrets committed
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # .gitignore already excludes these. This catches the day someone
+      # commits one with --force, which is exactly when nobody is looking.
+      - name: Check for committed env files and databases
+        run: |
+          found=$(git ls-files | grep -E '(^|/)\.env($|\.)|\.db$|\.sqlite3?$' || true)
+          if [ -n "$found" ]; then
+            echo "::error::These must never be committed:"
+            echo "$found"
+            exit 1
+          fi
+          echo "Clean — no env files or databases tracked."
