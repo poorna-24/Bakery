@@ -4,15 +4,25 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { MenuCategory, MenuItem } from "@/lib/types";
 import ItemCard from "./ItemCard";
 import ItemSheet from "./ItemSheet";
+import Footer from "./Footer";
 
 type Props = {
   categories: MenuCategory[];
   shopName: string;
   tagline: string;
+  address: string;
+  mapUrl: string;
   phone: string;
 };
 
-export default function Menu({ categories, shopName, tagline, phone }: Props) {
+export default function Menu({
+  categories,
+  shopName,
+  tagline,
+  address,
+  mapUrl,
+  phone,
+}: Props) {
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [activeSlug, setActiveSlug] = useState(categories[0]?.slug ?? "");
@@ -251,14 +261,7 @@ export default function Menu({ categories, shopName, tagline, phone }: Props) {
         </div>
       )}
 
-      <footer className="mt-12 px-6 pb-4 text-center text-xs text-[var(--muted)]">
-        <p>Prices are inclusive of taxes and may change without notice.</p>
-        {phone && (
-          <a href={`tel:${phone}`} className="mt-2 inline-block font-medium text-[var(--accent)]">
-            Call us: {phone}
-          </a>
-        )}
-      </footer>
+      <Footer shopName={shopName} address={address} mapUrl={mapUrl} phone={phone} />
 
       {selected && (
         <ItemSheet item={selected} phone={phone} onClose={() => setSelected(null)} />

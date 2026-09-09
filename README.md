@@ -36,6 +36,8 @@ ipconfig | findstr IPv4
 | `BAKERY_DATA_DIR` | Folder holding `bakery.db` and `uploads/`. Must match bakery-admin. |
 | `NEXT_PUBLIC_SHOP_NAME` | Shown in the header and the page title. |
 | `NEXT_PUBLIC_SHOP_TAGLINE` | The line under "Our Menu". |
+| `NEXT_PUBLIC_SHOP_ADDRESS` | Address text in the footer. |
+| `NEXT_PUBLIC_SHOP_MAP_URL` | Google Maps link behind the "Get directions" button. |
 | `NEXT_PUBLIC_SHOP_PHONE` | Optional. Set it and a "Call the shop" button appears. |
 
 `DATABASE_URL` also has to be in `.env` — the Prisma CLI does not read `.env.local`.

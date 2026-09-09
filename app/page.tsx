@@ -54,6 +54,8 @@ export default async function MenuPage() {
       categories={categories}
       shopName={process.env.NEXT_PUBLIC_SHOP_NAME ?? "Our Bakery"}
       tagline={process.env.NEXT_PUBLIC_SHOP_TAGLINE ?? "Freshly baked every morning."}
+      address={process.env.NEXT_PUBLIC_SHOP_ADDRESS ?? ""}
+      mapUrl={process.env.NEXT_PUBLIC_SHOP_MAP_URL ?? ""}
       phone={process.env.NEXT_PUBLIC_SHOP_PHONE ?? ""}
     />
   );
