@@ -62,6 +62,7 @@ export default async function MenuPage() {
       address={process.env.NEXT_PUBLIC_SHOP_ADDRESS ?? ""}
       mapUrl={process.env.NEXT_PUBLIC_SHOP_MAP_URL ?? ""}
       phone={process.env.NEXT_PUBLIC_SHOP_PHONE ?? ""}
+      whatsapp={process.env.NEXT_PUBLIC_SHOP_WHATSAPP ?? ""}
       appearance={appearance}
     />
   );

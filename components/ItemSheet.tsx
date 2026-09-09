@@ -3,15 +3,19 @@
 import { useEffect } from "react";
 import type { MenuItem } from "@/lib/types";
 import { formatPrice } from "@/lib/types";
+import { itemEnquiry, telHref, whatsappHref } from "@/lib/contact";
 import VegMark from "./VegMark";
+import { WhatsAppIcon } from "./Footer";
 
 type Props = {
   item: MenuItem;
   phone: string;
+  whatsapp: string;
+  shopName: string;
   onClose: () => void;
 };
 
-export default function ItemSheet({ item, phone, onClose }: Props) {
+export default function ItemSheet({ item, phone, whatsapp, shopName, onClose }: Props) {
   // Freeze the page behind the sheet, and let Escape / back-gesture close it.
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -27,6 +31,9 @@ export default function ItemSheet({ item, phone, onClose }: Props) {
       window.removeEventListener("keydown", onKeyDown);
     };
   }, [onClose]);
+
+  const tel = telHref(phone);
+  const wa = whatsappHref(whatsapp || phone, itemEnquiry(shopName, item.name));
 
   const tags = [
     item.isVeg ? "Veg" : "Non-veg",
@@ -114,10 +121,24 @@ export default function ItemSheet({ item, phone, onClose }: Props) {
             )}
           </div>
 
-          {phone && (
+          {/* Asking about one cake is a WhatsApp job, so the message arrives
+              already naming the item the customer is looking at. */}
+          {wa && (
             <a
-              href={`tel:${phone}`}
-              className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-[var(--accent)] py-3.5 font-semibold text-white"
+              href={wa}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-[#25D366] py-3.5 font-semibold text-white"
+            >
+              <WhatsAppIcon />
+              Ask about this on WhatsApp
+            </a>
+          )}
+
+          {tel && (
+            <a
+              href={tel}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-full border border-[var(--accent)] py-3.5 font-semibold text-[var(--accent)]"
             >
               <PhoneIcon />
               Call the shop

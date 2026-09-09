@@ -16,6 +16,7 @@ type Props = {
   address: string;
   mapUrl: string;
   phone: string;
+  whatsapp: string;
   appearance: Appearance;
 };
 
@@ -26,6 +27,7 @@ export default function Menu({
   address,
   mapUrl,
   phone,
+  whatsapp,
   appearance,
 }: Props) {
   const [query, setQuery] = useState("");
@@ -295,10 +297,22 @@ export default function Menu({
         </div>
       )}
 
-      <Footer shopName={shopName} address={address} mapUrl={mapUrl} phone={phone} />
+      <Footer
+        shopName={shopName}
+        address={address}
+        mapUrl={mapUrl}
+        phone={phone}
+        whatsapp={whatsapp}
+      />
 
       {selected && (
-        <ItemSheet item={selected} phone={phone} onClose={() => setSelected(null)} />
+        <ItemSheet
+          item={selected}
+          phone={phone}
+          whatsapp={whatsapp}
+          shopName={shopName}
+          onClose={() => setSelected(null)}
+        />
       )}
     </main>
   );
