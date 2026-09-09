@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { slugify } from "@/lib/types";
 import { deleteImage, saveImage } from "@/lib/saveImage";
+import { SETTING_KEYS, isBackgroundId } from "@/lib/backgrounds";
 
 // Every mutation the owner can perform. Middleware has already rejected
 // anyone without a session before these run.
@@ -270,4 +271,79 @@ export async function deleteItem(formData: FormData) {
   revalidatePath("/");
   revalidatePath(`/categories/${item.categoryId}`);
   redirect(`/categories/${item.categoryId}`);
+}
+
+// ---------------------------------------------------------------- appearance
+
+/**
+ * Saves the chosen background. An uploaded photo replaces whatever was there
+ * before and the old file is removed, so the folder does not fill up with
+ * abandoned backgrounds.
+ */
+export async function saveAppearance(formData: FormData) {
+  const chosen = text(formData, "backgroundId");
+  if (!isBackgroundId(chosen)) return;
+
+  const previousUrl =
+    (await prisma.setting.findUnique({ where: { key: SETTING_KEYS.backgroundImageUrl } }))?.value ??
+    null;
+
+  const saved = await saveImage(formData.get("backgroundImage") as File | null);
+  if (saved && "error" in saved) {
+    redirect(`/appearance?error=${encodeURIComponent(saved.error)}`);
+  }
+
+  const uploadedUrl = saved && "url" in saved ? saved.url : null;
+  const imageUrl = uploadedUrl ?? previousUrl;
+
+  // Picking a photo background without ever uploading one would render nothing.
+  if (chosen === "custom" && !imageUrl) {
+    redirect(`/appearance?error=${encodeURIComponent("Choose a photo to upload first.")}`);
+  }
+
+  if (uploadedUrl && previousUrl) await deleteImage(previousUrl);
+
+  await prisma.$transaction([
+    prisma.setting.upsert({
+      where: { key: SETTING_KEYS.backgroundId },
+      create: { key: SETTING_KEYS.backgroundId, value: chosen },
+      update: { value: chosen },
+    }),
+    prisma.setting.upsert({
+      where: { key: SETTING_KEYS.backgroundImageUrl },
+      create: { key: SETTING_KEYS.backgroundImageUrl, value: imageUrl ?? "" },
+      update: { value: imageUrl ?? "" },
+    }),
+  ]);
+
+  revalidatePath("/appearance");
+  redirect("/appearance?saved=1");
+}
+
+/** Removes the uploaded photo and falls back to the plain background. */
+export async function removeBackgroundImage() {
+  const previousUrl =
+    (await prisma.setting.findUnique({ where: { key: SETTING_KEYS.backgroundImageUrl } }))?.value ??
+    null;
+
+  await deleteImage(previousUrl);
+
+  const current = await prisma.setting.findUnique({ where: { key: SETTING_KEYS.backgroundId } });
+
+  await prisma.$transaction([
+    prisma.setting.upsert({
+      where: { key: SETTING_KEYS.backgroundImageUrl },
+      create: { key: SETTING_KEYS.backgroundImageUrl, value: "" },
+      update: { value: "" },
+    }),
+    prisma.setting.upsert({
+      where: { key: SETTING_KEYS.backgroundId },
+      create: { key: SETTING_KEYS.backgroundId, value: "plain" },
+      // Only reset the choice if the photo was the one being shown.
+      update: { value: current?.value === "custom" ? "plain" : (current?.value ?? "plain") },
+    }),
+  ]);
+
+  revalidatePath("/appearance");
+  redirect("/appearance?saved=1");
 }

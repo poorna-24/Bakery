@@ -61,3 +61,12 @@ model ItemVariant {
 
   @@index([itemId, sortOrder])
 }
+
+/// Shop-wide settings as key/value pairs — the admin writes them, the customer
+/// app reads them. Key/value rather than columns so adding the next setting
+/// does not need a migration in two repos.
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
