@@ -2,9 +2,12 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { MenuCategory, MenuItem } from "@/lib/types";
+import type { Appearance } from "@/lib/backgrounds";
 import ItemCard from "./ItemCard";
 import ItemSheet from "./ItemSheet";
 import Footer from "./Footer";
+import Backdrop from "./Backdrop";
+import Wordmark, { Flourish } from "./Wordmark";
 
 type Props = {
   categories: MenuCategory[];
@@ -13,6 +16,7 @@ type Props = {
   address: string;
   mapUrl: string;
   phone: string;
+  appearance: Appearance;
 };
 
 export default function Menu({
@@ -22,11 +26,14 @@ export default function Menu({
   address,
   mapUrl,
   phone,
+  appearance,
 }: Props) {
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [activeSlug, setActiveSlug] = useState(categories[0]?.slug ?? "");
   const [selected, setSelected] = useState<MenuItem | null>(null);
+  // Drives the compact name in the sticky bar, once the hero is out of sight.
+  const [pastHero, setPastHero] = useState(false);
 
   const searchInput = useRef<HTMLInputElement>(null);
   const chipRail = useRef<HTMLDivElement>(null);
@@ -38,6 +45,15 @@ export default function Menu({
   useEffect(() => () => window.clearTimeout(jumpTimer.current), []);
 
   const searching = query.trim().length > 0;
+
+  useEffect(() => {
+    function onScroll() {
+      setPastHero(window.scrollY > 150);
+    }
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const visible = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -160,16 +176,26 @@ export default function Menu({
 
   return (
     <main className="mx-auto min-h-dvh max-w-screen-sm pb-16">
-      <header className="sticky top-0 z-30 border-b border-[var(--line)] bg-[var(--bg)]/95 backdrop-blur">
-        <div className="flex h-14 items-center justify-between px-4">
-          <span className="text-base font-extrabold uppercase tracking-tight text-[var(--accent)]">
-            {shopName}
-          </span>
+      <Backdrop appearance={appearance} />
+      <header className="sticky top-0 z-30 border-b border-[var(--line)] bar-surface backdrop-blur">
+        <div className="grid h-14 grid-cols-[2.75rem_1fr_2.75rem] items-center px-2">
+          <span aria-hidden="true" />
+
+          {/* The name lives large in the hero; this compact copy fades in only
+              once the hero has scrolled away, so it is never shown twice. */}
+          <div
+            className={`flex min-w-0 justify-center px-1 transition-opacity duration-300 ${
+              pastHero || searchOpen ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            <Wordmark name={shopName} size="bar" />
+          </div>
+
           <button
             type="button"
             onClick={searchOpen ? closeSearch : openSearch}
             aria-label={searchOpen ? "Close search" : "Search the menu"}
-            className="grid h-10 w-10 place-items-center rounded-full active:bg-[var(--line)]"
+            className="grid h-11 w-11 place-items-center justify-self-end rounded-full active:bg-[var(--line)]"
           >
             {searchOpen ? <CloseIcon /> : <SearchIcon />}
           </button>
@@ -188,9 +214,24 @@ export default function Menu({
             />
           </div>
         )}
+      </header>
 
-        {!searching && categories.length > 0 && (
-          <div ref={chipRail} className="no-scrollbar flex gap-2 overflow-x-auto px-4 pb-3">
+      {!searchOpen && (
+        <section className="px-5 pb-7 pt-9 text-center">
+          <Wordmark name={shopName} size="hero" />
+          <Flourish />
+          <p className="mx-auto mt-4 max-w-[19rem] text-sm leading-relaxed text-[var(--muted)]">
+            {tagline}
+          </p>
+          <p className="mt-7 text-[11px] font-semibold uppercase tracking-[0.3em] text-[var(--muted)]">
+            Our Menu
+          </p>
+        </section>
+      )}
+
+      {!searching && categories.length > 0 && (
+        <div className="sticky top-14 z-20 border-b border-[var(--line)] bar-surface py-2.5 backdrop-blur">
+          <div ref={chipRail} className="no-scrollbar flex gap-2 overflow-x-auto px-4">
             {categories.map((category) => {
               const active = category.slug === activeSlug;
               return (
@@ -202,7 +243,7 @@ export default function Menu({
                   aria-current={active ? "true" : undefined}
                   className={`shrink-0 whitespace-nowrap rounded-full border px-4 py-2 text-sm transition-colors ${
                     active
-                      ? "border-[var(--accent)] bg-[var(--accent)] font-semibold text-white"
+                      ? "border-[var(--accent)] bg-[var(--accent)] font-semibold text-white shadow-sm"
                       : "border-[var(--line)] bg-[var(--surface)] text-[var(--text)]"
                   }`}
                 >
@@ -211,14 +252,7 @@ export default function Menu({
               );
             })}
           </div>
-        )}
-      </header>
-
-      {!searchOpen && (
-        <section className="px-5 pb-2 pt-8 text-center">
-          <h1 className="text-3xl font-extrabold tracking-tight">Our Menu</h1>
-          <p className="mt-2 text-sm text-[var(--muted)]">{tagline}</p>
-        </section>
+        </div>
       )}
 
       {categories.length === 0 ? (

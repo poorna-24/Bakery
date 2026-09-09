@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import type { MenuCategory } from "@/lib/types";
+import { toAppearance } from "@/lib/backgrounds";
 import Menu from "@/components/Menu";
 
 // The owner edits the menu in the admin app, which writes to the same database.
@@ -47,7 +48,11 @@ async function getMenu(): Promise<MenuCategory[]> {
 }
 
 export default async function MenuPage() {
-  const categories = await getMenu();
+  const [categories, settingRows] = await Promise.all([
+    getMenu(),
+    prisma.setting.findMany(),
+  ]);
+  const appearance = toAppearance(settingRows);
 
   return (
     <Menu
@@ -57,6 +62,7 @@ export default async function MenuPage() {
       address={process.env.NEXT_PUBLIC_SHOP_ADDRESS ?? ""}
       mapUrl={process.env.NEXT_PUBLIC_SHOP_MAP_URL ?? ""}
       phone={process.env.NEXT_PUBLIC_SHOP_PHONE ?? ""}
+      appearance={appearance}
     />
   );
 }

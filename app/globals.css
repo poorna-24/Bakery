@@ -70,3 +70,78 @@ body {
     animation: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Built-in backgrounds. Catalogued in lib/backgrounds.ts — the ids there must
+   match these class names. Drawn with gradients so there is nothing to
+   download and nothing to go blurry on a high-density phone screen.
+   --------------------------------------------------------------------------- */
+
+:root {
+  --pattern-ink: rgba(58, 36, 24, 0.09);
+  --pattern-ink-soft: rgba(58, 36, 24, 0.05);
+  --pattern-glow: rgba(224, 164, 92, 0.28);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pattern-ink: rgba(246, 236, 224, 0.07);
+    --pattern-ink-soft: rgba(246, 236, 224, 0.04);
+    --pattern-glow: rgba(224, 164, 92, 0.16);
+  }
+}
+
+.pattern-dots {
+  background-image: radial-gradient(var(--pattern-ink) 1.4px, transparent 1.5px);
+  background-size: 18px 18px;
+}
+
+/* Rows of arcs, like icing piped along the edge of a cake. */
+.pattern-scallops {
+  background-image: radial-gradient(
+    circle at 11px 22px,
+    transparent 9.4px,
+    var(--pattern-ink) 9.5px 10.5px,
+    transparent 10.6px
+  );
+  background-size: 22px 22px;
+}
+
+.pattern-linen {
+  background-image:
+    repeating-linear-gradient(45deg, var(--pattern-ink-soft) 0 1px, transparent 1px 7px),
+    repeating-linear-gradient(-45deg, var(--pattern-ink-soft) 0 1px, transparent 1px 7px);
+}
+
+.pattern-sunburst {
+  background-image: radial-gradient(120% 55% at 50% -8%, var(--pattern-glow), transparent 68%);
+  background-repeat: no-repeat;
+}
+
+/* ---------------------------------------------------------------------------
+   Translucent surfaces.
+
+   These carry their own alpha rather than using Tailwind's opacity modifier.
+   `bg-[var(--bg)]/92` looks reasonable but produces NO background at all:
+   Tailwind cannot inject an alpha channel into a variable holding a hex
+   colour, so it drops the declaration. The sticky header was see-through for
+   exactly that reason, which only showed once a photo sat behind it.
+   --------------------------------------------------------------------------- */
+
+.bar-surface {
+  background-color: rgb(253 246 236 / 0.93);
+}
+
+/* Dims an uploaded background photo so the menu stays readable over it. */
+.scrim {
+  background-color: rgb(253 246 236 / 0.9);
+}
+
+@media (prefers-color-scheme: dark) {
+  .bar-surface {
+    background-color: rgb(23 17 12 / 0.93);
+  }
+  .scrim {
+    background-color: rgb(23 17 12 / 0.92);
+  }
+}
