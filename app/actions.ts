@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import { slugify } from "@/lib/types";
 import { deleteImage, saveImage } from "@/lib/saveImage";
 import { SETTING_KEYS, isBackgroundId } from "@/lib/backgrounds";
+import { HOURS_KEYS, isValidTime } from "@/lib/hours";
 
 // Every mutation the owner can perform. Middleware has already rejected
 // anyone without a session before these run.
@@ -346,4 +347,52 @@ export async function removeBackgroundImage() {
 
   revalidatePath("/appearance");
   redirect("/appearance?saved=1");
+}
+
+// -------------------------------------------------------------------- hours
+
+/** Saves opening hours and any weekly off days. */
+export async function saveHours(formData: FormData) {
+  const clear = formData.get("clear") === "1";
+
+  if (clear) {
+    await prisma.setting.deleteMany({
+      where: { key: { in: [HOURS_KEYS.open, HOURS_KEYS.close, HOURS_KEYS.closedDays] } },
+    });
+    revalidatePath("/hours");
+    redirect("/hours?saved=1");
+  }
+
+  const open = text(formData, "open");
+  const close = text(formData, "close");
+
+  if (!isValidTime(open) || !isValidTime(close)) {
+    redirect(`/hours?error=${encodeURIComponent("Please give both an opening and a closing time.")}`);
+  }
+
+  const closedDays = formData
+    .getAll("closedDays")
+    .map((value) => Number(String(value)))
+    .filter((day) => Number.isInteger(day) && day >= 0 && day <= 6);
+
+  // Every day off would leave the menu permanently shut, which is never what
+  // the owner means — it is a mis-click.
+  if (closedDays.length === 7) {
+    redirect(`/hours?error=${encodeURIComponent("The shop cannot be closed every day of the week.")}`);
+  }
+
+  const rows: [string, string][] = [
+    [HOURS_KEYS.open, open],
+    [HOURS_KEYS.close, close],
+    [HOURS_KEYS.closedDays, closedDays.join(",")],
+  ];
+
+  await prisma.$transaction(
+    rows.map(([key, value]) =>
+      prisma.setting.upsert({ where: { key }, create: { key, value }, update: { value } }),
+    ),
+  );
+
+  revalidatePath("/hours");
+  redirect("/hours?saved=1");
 }
