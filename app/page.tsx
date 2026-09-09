@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import type { MenuCategory } from "@/lib/types";
 import { toAppearance } from "@/lib/backgrounds";
+import { shopNow, shopStatus, toShopHours } from "@/lib/hours";
 import Menu from "@/components/Menu";
 
 // The owner edits the menu in the admin app, which writes to the same database.
@@ -54,6 +55,11 @@ export default async function MenuPage() {
   ]);
   const appearance = toAppearance(settingRows);
 
+  // Worked out here so the first paint is already right; OpenStatus keeps it
+  // current from the browser after that.
+  const hours = toShopHours(settingRows);
+  const hoursStatus = hours ? shopStatus(hours, shopNow()) : null;
+
   return (
     <Menu
       categories={categories}
@@ -68,6 +74,8 @@ export default async function MenuPage() {
         whatsapp: process.env.NEXT_PUBLIC_CREDIT_WHATSAPP ?? "",
       }}
       appearance={appearance}
+      hours={hours}
+      hoursStatus={hoursStatus}
     />
   );
 }

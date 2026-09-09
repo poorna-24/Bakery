@@ -78,6 +78,8 @@ function renderMenu(overrides: Partial<React.ComponentProps<typeof Menu>> = {}) 
       whatsapp=""
       credit={{ name: "", whatsapp: "" }}
       appearance={DEFAULT_APPEARANCE}
+      hours={null}
+      hoursStatus={null}
       {...overrides}
     />,
   );

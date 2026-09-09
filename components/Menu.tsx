@@ -3,11 +3,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { MenuCategory, MenuItem } from "@/lib/types";
 import type { Appearance } from "@/lib/backgrounds";
+import type { ShopHours, ShopStatus } from "@/lib/hours";
 import ItemCard from "./ItemCard";
 import ItemSheet from "./ItemSheet";
 import Footer from "./Footer";
 import Backdrop from "./Backdrop";
 import Wordmark, { Flourish } from "./Wordmark";
+import OpenStatus from "./OpenStatus";
 
 type Props = {
   categories: MenuCategory[];
@@ -19,6 +21,8 @@ type Props = {
   whatsapp: string;
   credit: { name: string; whatsapp: string };
   appearance: Appearance;
+  hours: ShopHours | null;
+  hoursStatus: ShopStatus | null;
 };
 
 export default function Menu({
@@ -31,6 +35,8 @@ export default function Menu({
   whatsapp,
   credit,
   appearance,
+  hours,
+  hoursStatus,
 }: Props) {
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -227,6 +233,8 @@ export default function Menu({
           <p className="mx-auto mt-4 max-w-[19rem] text-sm leading-relaxed text-[var(--muted)]">
             {tagline}
           </p>
+
+          {hours && hoursStatus && <OpenStatus hours={hours} initial={hoursStatus} />}
           <p className="mt-7 text-[11px] font-semibold uppercase tracking-[0.3em] text-[var(--muted)]">
             Our Menu
           </p>
