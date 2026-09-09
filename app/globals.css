@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #fdf6ec;
+  --surface: #ffffff;
+  --text: #3a2418;
+  --muted: #8a7663;
+  --line: #eaddc9;
+  --accent: #b4741f;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #17110c;
+    --surface: #221912;
+    --text: #f6ece0;
+    --muted: #a99683;
+    --line: #35271c;
+    --accent: #e0a45c;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+  /* the sticky header + chip rail must not cover a section we jump to */
+  scroll-padding-top: 116px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  overscroll-behavior-y: none;
+}
+
+/* Horizontal category rail: scrolls with the thumb, no visible scrollbar. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Placeholder shimmer shown while an item photo loads. */
+.shimmer {
+  background-image: linear-gradient(
+    100deg,
+    var(--line) 20%,
+    color-mix(in srgb, var(--line) 55%, white) 40%,
+    var(--line) 60%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .shimmer {
+    animation: none;
+  }
+}

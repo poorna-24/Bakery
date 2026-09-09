@@ -1,0 +1,266 @@
+"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { MenuCategory, MenuItem } from "@/lib/types";
+import ItemCard from "./ItemCard";
+import ItemSheet from "./ItemSheet";
+
+type Props = {
+  categories: MenuCategory[];
+  shopName: string;
+  tagline: string;
+  phone: string;
+};
+
+export default function Menu({ categories, shopName, tagline, phone }: Props) {
+  const [query, setQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [activeSlug, setActiveSlug] = useState(categories[0]?.slug ?? "");
+  const [selected, setSelected] = useState<MenuItem | null>(null);
+
+  const searchInput = useRef<HTMLInputElement>(null);
+  const chipRail = useRef<HTMLDivElement>(null);
+  const sectionRefs = useRef(new Map<string, HTMLElement>());
+  // Set while a chip tap is scrolling, so scroll-spy does not fight the jump.
+  const jumpingTo = useRef<string | null>(null);
+  const jumpTimer = useRef<number | undefined>(undefined);
+
+  useEffect(() => () => window.clearTimeout(jumpTimer.current), []);
+
+  const searching = query.trim().length > 0;
+
+  const visible = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    if (!needle) return categories;
+    return categories
+      .map((category) => ({
+        ...category,
+        items: category.items.filter(
+          (item) =>
+            item.name.toLowerCase().includes(needle) ||
+            item.description.toLowerCase().includes(needle),
+        ),
+      }))
+      .filter((category) => category.items.length > 0);
+  }, [categories, query]);
+
+  // Highlight the chip for whichever section is under the header.
+  useEffect(() => {
+    if (searching) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const onScreen = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+        if (!onScreen) return;
+
+        const slug = onScreen.target.getAttribute("data-slug");
+        if (!slug) return;
+        if (jumpingTo.current && jumpingTo.current !== slug) return;
+        jumpingTo.current = null;
+        setActiveSlug(slug);
+      },
+      // Top band of the viewport, just below the sticky header.
+      { rootMargin: "-120px 0px -65% 0px", threshold: 0 },
+    );
+
+    sectionRefs.current.forEach((node) => observer.observe(node));
+    return () => observer.disconnect();
+  }, [searching, visible.length]);
+
+  // Keep the active chip in view on the rail as you scroll the page.
+  useEffect(() => {
+    const rail = chipRail.current;
+    if (!rail || searching) return;
+    const chip = rail.querySelector<HTMLElement>(`[data-chip="${activeSlug}"]`);
+    if (!chip) return;
+
+    // On the first paint the rail can still be mid-layout (width 0), and
+    // centring against that scrolls the first chip half off the screen.
+    if (rail.clientWidth === 0) return;
+
+    const railBox = rail.getBoundingClientRect();
+    const chipBox = chip.getBoundingClientRect();
+    const fullyVisible = chipBox.left >= railBox.left && chipBox.right <= railBox.right;
+    if (fullyVisible) return;
+
+    const centred = chip.offsetLeft - rail.clientWidth / 2 + chip.clientWidth / 2;
+    const maxScroll = rail.scrollWidth - rail.clientWidth;
+    rail.scrollTo({
+      left: Math.max(0, Math.min(centred, maxScroll)),
+      behavior: "smooth",
+    });
+  }, [activeSlug, searching]);
+
+  function jumpTo(slug: string) {
+    jumpingTo.current = slug;
+    setActiveSlug(slug);
+    sectionRefs.current.get(slug)?.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    // The last section can be too short to ever reach the top of the viewport,
+    // so the observer may never confirm the landing. Release the lock anyway,
+    // otherwise the chips would stay frozen on this one.
+    window.clearTimeout(jumpTimer.current);
+    jumpTimer.current = window.setTimeout(() => {
+      jumpingTo.current = null;
+    }, 900);
+  }
+
+  function openSearch() {
+    setSearchOpen(true);
+    // The input mounts on the same tick; focus once it exists.
+    requestAnimationFrame(() => searchInput.current?.focus());
+  }
+
+  function closeSearch() {
+    setQuery("");
+    setSearchOpen(false);
+  }
+
+  const itemCount = categories.reduce((total, category) => total + category.items.length, 0);
+
+  return (
+    <main className="mx-auto min-h-dvh max-w-screen-sm pb-16">
+      <header className="sticky top-0 z-30 border-b border-[var(--line)] bg-[var(--bg)]/95 backdrop-blur">
+        <div className="flex h-14 items-center justify-between px-4">
+          <span className="text-base font-extrabold uppercase tracking-tight text-[var(--accent)]">
+            {shopName}
+          </span>
+          <button
+            type="button"
+            onClick={searchOpen ? closeSearch : openSearch}
+            aria-label={searchOpen ? "Close search" : "Search the menu"}
+            className="grid h-10 w-10 place-items-center rounded-full active:bg-[var(--line)]"
+          >
+            {searchOpen ? <CloseIcon /> : <SearchIcon />}
+          </button>
+        </div>
+
+        {searchOpen && (
+          <div className="animate-fadeIn px-4 pb-3">
+            <input
+              ref={searchInput}
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              type="search"
+              inputMode="search"
+              placeholder="Search cakes, breads, snacks…"
+              className="w-full rounded-full border border-[var(--line)] bg-[var(--surface)] px-4 py-2.5 text-base outline-none placeholder:text-[var(--muted)] focus:border-[var(--accent)]"
+            />
+          </div>
+        )}
+
+        {!searching && categories.length > 0 && (
+          <div ref={chipRail} className="no-scrollbar flex gap-2 overflow-x-auto px-4 pb-3">
+            {categories.map((category) => {
+              const active = category.slug === activeSlug;
+              return (
+                <button
+                  key={category.slug}
+                  data-chip={category.slug}
+                  type="button"
+                  onClick={() => jumpTo(category.slug)}
+                  aria-current={active ? "true" : undefined}
+                  className={`shrink-0 whitespace-nowrap rounded-full border px-4 py-2 text-sm transition-colors ${
+                    active
+                      ? "border-[var(--accent)] bg-[var(--accent)] font-semibold text-white"
+                      : "border-[var(--line)] bg-[var(--surface)] text-[var(--text)]"
+                  }`}
+                >
+                  {category.name}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </header>
+
+      {!searchOpen && (
+        <section className="px-5 pb-2 pt-8 text-center">
+          <h1 className="text-3xl font-extrabold tracking-tight">Our Menu</h1>
+          <p className="mt-2 text-sm text-[var(--muted)]">{tagline}</p>
+        </section>
+      )}
+
+      {categories.length === 0 ? (
+        <EmptyState
+          title="The menu is being set up"
+          body="Nothing has been added yet. Please check back in a little while."
+        />
+      ) : visible.length === 0 ? (
+        <EmptyState
+          title={`No matches for “${query.trim()}”`}
+          body={`Try a different word — there are ${itemCount} items on the menu.`}
+        />
+      ) : (
+        <div className="mt-4 space-y-9">
+          {visible.map((category) => (
+            <section
+              key={category.id}
+              id={category.slug}
+              data-slug={category.slug}
+              ref={(node) => {
+                if (node) sectionRefs.current.set(category.slug, node);
+                else sectionRefs.current.delete(category.slug);
+              }}
+              className="scroll-mt-28 px-4"
+            >
+              <div className="border-l-4 border-[var(--accent)] pl-3">
+                <h2 className="text-xl font-bold tracking-tight">{category.name}</h2>
+                {category.description && (
+                  <p className="mt-0.5 text-sm text-[var(--muted)]">{category.description}</p>
+                )}
+              </div>
+
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                {category.items.map((item) => (
+                  <ItemCard key={item.id} item={item} onOpen={() => setSelected(item)} />
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      )}
+
+      <footer className="mt-12 px-6 pb-4 text-center text-xs text-[var(--muted)]">
+        <p>Prices are inclusive of taxes and may change without notice.</p>
+        {phone && (
+          <a href={`tel:${phone}`} className="mt-2 inline-block font-medium text-[var(--accent)]">
+            Call us: {phone}
+          </a>
+        )}
+      </footer>
+
+      {selected && (
+        <ItemSheet item={selected} phone={phone} onClose={() => setSelected(null)} />
+      )}
+    </main>
+  );
+}
+
+function EmptyState({ title, body }: { title: string; body: string }) {
+  return (
+    <div className="px-8 py-20 text-center">
+      <p className="text-lg font-semibold">{title}</p>
+      <p className="mt-2 text-sm text-[var(--muted)]">{body}</p>
+    </div>
+  );
+}
+
+function SearchIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.5-3.5" />
+    </svg>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>
+  );
+}
