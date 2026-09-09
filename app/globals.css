@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #f7f4ef;
+  --surface: #ffffff;
+  --text: #2b1e14;
+  --muted: #7a6a5b;
+  --line: #e5dcd0;
+  --accent: #b4741f;
+  --danger: #b91c1c;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+@layer components {
+  .field {
+    @apply w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-sm outline-none focus:border-[var(--accent)];
+  }
+  .label {
+    @apply mb-1 block text-xs font-semibold uppercase tracking-wide text-[var(--muted)];
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn bg-[var(--accent)] text-white hover:bg-[#9c631a];
+  }
+  .btn-ghost {
+    @apply btn border border-[var(--line)] bg-white hover:bg-[var(--bg)];
+  }
+  .btn-danger {
+    @apply btn border border-red-200 bg-white text-[var(--danger)] hover:bg-red-50;
+  }
+  .card {
+    @apply rounded-xl border border-[var(--line)] bg-[var(--surface)];
+  }
+}
