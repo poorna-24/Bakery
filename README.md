@@ -70,3 +70,4 @@ Change the `provider` in `prisma/schema.prisma` to `postgresql` **in both repos*
 
 Photos are the other half: replace `lib/storage.ts` with an S3 / Supabase Storage client, since a
 single folder on disk does not work once the two apps run on different machines.
+
