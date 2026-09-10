@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import type { MenuCategory } from "@/lib/types";
 import { toAppearance } from "@/lib/backgrounds";
 import { shopNow, shopStatus, toShopHours } from "@/lib/hours";
+import { toOffer } from "@/lib/offer";
 import Menu from "@/components/Menu";
 
 // The owner edits the menu in the admin app, which writes to the same database.
@@ -57,6 +58,7 @@ export default async function MenuPage() {
 
   // Worked out here so the first paint is already right; OpenStatus keeps it
   // current from the browser after that.
+  const offer = toOffer(settingRows);
   const hours = toShopHours(settingRows);
   const hoursStatus = hours ? shopStatus(hours, shopNow()) : null;
 
@@ -76,6 +78,7 @@ export default async function MenuPage() {
       appearance={appearance}
       hours={hours}
       hoursStatus={hoursStatus}
+      offer={offer}
     />
   );
 }

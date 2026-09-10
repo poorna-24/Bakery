@@ -4,12 +4,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { MenuCategory, MenuItem } from "@/lib/types";
 import type { Appearance } from "@/lib/backgrounds";
 import type { ShopHours, ShopStatus } from "@/lib/hours";
+import type { Offer } from "@/lib/offer";
 import ItemCard from "./ItemCard";
 import ItemSheet from "./ItemSheet";
 import Footer from "./Footer";
 import Backdrop from "./Backdrop";
 import Wordmark, { Flourish } from "./Wordmark";
 import OpenStatus from "./OpenStatus";
+import OfferBanner from "./OfferBanner";
 
 type Props = {
   categories: MenuCategory[];
@@ -23,6 +25,7 @@ type Props = {
   appearance: Appearance;
   hours: ShopHours | null;
   hoursStatus: ShopStatus | null;
+  offer: Offer | null;
 };
 
 export default function Menu({
@@ -37,6 +40,7 @@ export default function Menu({
   appearance,
   hours,
   hoursStatus,
+  offer,
 }: Props) {
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -187,6 +191,9 @@ export default function Menu({
   return (
     <main className="mx-auto min-h-dvh max-w-screen-sm pb-16">
       <Backdrop appearance={appearance} />
+
+      {offer && <OfferBanner offer={offer} />}
+
       <header className="sticky top-0 z-30 border-b border-[var(--line)] bar-surface backdrop-blur">
         <div className="grid h-14 grid-cols-[2.75rem_1fr_2.75rem] items-center px-2">
           <span aria-hidden="true" />

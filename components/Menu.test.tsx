@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import Menu from "./Menu";
 import type { MenuCategory } from "@/lib/types";
 import { DEFAULT_APPEARANCE } from "@/lib/backgrounds";
+import type { Offer } from "@/lib/offer";
 
 const categories: MenuCategory[] = [
   {
@@ -80,6 +81,7 @@ function renderMenu(overrides: Partial<React.ComponentProps<typeof Menu>> = {}) 
       appearance={DEFAULT_APPEARANCE}
       hours={null}
       hoursStatus={null}
+      offer={null}
       {...overrides}
     />,
   );
@@ -250,6 +252,46 @@ describe("the footer", () => {
     renderMenu();
     expect(screen.queryByRole("link", { name: /whatsapp/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /call/i })).not.toBeInTheDocument();
+  });
+});
+
+describe("the offer strip", () => {
+  const offer: Offer = {
+    text: "Diwali special — 20% off all sweets",
+    note: "Till 5 November",
+    tone: "gold",
+    isVisible: true,
+  };
+
+  it("is absent when the owner has not set one", () => {
+    renderMenu();
+    expect(screen.queryByRole("complementary", { name: /offer/i })).not.toBeInTheDocument();
+  });
+
+  it("shows the offer text and note", () => {
+    renderMenu({ offer });
+    const strip = screen.getByRole("complementary", { name: /offer/i });
+    expect(within(strip).getByText(offer.text)).toBeInTheDocument();
+    expect(within(strip).getByText("Till 5 November")).toBeInTheDocument();
+  });
+
+  it("paints it in the colour the owner chose", () => {
+    renderMenu({ offer });
+    expect(screen.getByRole("complementary", { name: /offer/i })).toHaveClass("offer-gold");
+  });
+
+  it("omits the second line when there is none", () => {
+    renderMenu({ offer: { ...offer, note: "" } });
+    const strip = screen.getByRole("complementary", { name: /offer/i });
+    expect(within(strip).queryByText("Till 5 November")).not.toBeInTheDocument();
+  });
+
+  // It has to be the first thing read after the scan, above the shop name.
+  it("sits above the shop name", () => {
+    renderMenu({ offer });
+    const strip = screen.getByRole("complementary", { name: /offer/i });
+    const heading = screen.getByRole("heading", { name: "SHIVAM BAKERY" });
+    expect(strip.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 });
 

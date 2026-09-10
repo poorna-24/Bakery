@@ -145,3 +145,22 @@ body {
     background-color: rgb(23 17 12 / 0.92);
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Offer / festival strip colours. Ids live in lib/offer.ts — the class names
+   there must match these. Each pairs a solid background with text that stays
+   readable on it in both light and dark mode, so the strip reads the same way
+   whatever the viewer's phone is set to.
+   --------------------------------------------------------------------------- */
+
+.offer-festive { background-color: #B3261E; color: #FFF6F5; }
+.offer-gold    { background-color: #B4741F; color: #FFF9EF; }
+.offer-fresh   { background-color: #1B6E45; color: #F2FBF6; }
+.offer-berry   { background-color: #7A2E6B; color: #FDF4FB; }
+
+@media (prefers-color-scheme: dark) {
+  .offer-festive { background-color: #8E1C16; }
+  .offer-gold    { background-color: #8A5816; }
+  .offer-fresh   { background-color: #145434; }
+  .offer-berry   { background-color: #5E2352; }
+}
