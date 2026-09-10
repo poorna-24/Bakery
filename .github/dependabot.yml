@@ -16,6 +16,39 @@ updates:
         dependency-type: development
         update-types: [minor, patch]
 
+    # Major bumps on these are migrations, not upgrades, and Dependabot cannot
+    # do them: ESLint 10 needs eslint-config-next 16, which is versioned in
+    # lockstep with Next 16, which is its own piece of work. Left unignored,
+    # the same unmergeable pull requests reappear every week until the list
+    # stops being worth reading.
+    #
+    # Only major is ignored. Patches, minors and security advisories still
+    # come through — those are the ones worth acting on quickly.
+    ignore:
+      - dependency-name: "next"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "eslint-config-next"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "tailwindcss"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "prisma"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@prisma/client"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "vitest"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@vitest/coverage-v8"
+        update-types: ["version-update:semver-major"]
+      # @types/node tracks the Node version actually running (24 on Vercel),
+      # not npm's latest tag. A major bump here would put the types ahead of
+      # the runtime, so code compiles against APIs that do not exist yet.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
