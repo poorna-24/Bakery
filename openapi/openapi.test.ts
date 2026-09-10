@@ -1,3 +1,10 @@
+/**
+ * @vitest-environment node
+ *
+ * This suite reads files off disk and runs no DOM code. Declared here
+ * rather than in vitest.config.ts because environmentMatchGlobs is
+ * deprecated in Vitest 3 and gone in 4.
+ */
 import { describe, expect, it } from "vitest";
 import { existsSync } from "node:fs";
 import path from "node:path";

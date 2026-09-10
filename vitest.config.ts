@@ -7,8 +7,6 @@ export default defineConfig({
     globals: true,
     setupFiles: ["./vitest.setup.ts"],
     include: ["**/*.test.{ts,tsx}"],
-    // The spec test reads files and runs no DOM code.
-    environmentMatchGlobs: [["openapi/**", "node"]],
     exclude: ["node_modules", ".next"],
     coverage: {
       provider: "v8",
