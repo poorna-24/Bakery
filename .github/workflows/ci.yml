@@ -17,9 +17,11 @@ permissions:
   contents: read
 
 env:
-  # Prisma needs a datasource to generate a client. Nothing here talks to a
-  # real database, so a throwaway SQLite file is enough.
-  DATABASE_URL: "file:./ci.db"
+  # Prisma validates the URL against the datasource provider before it will
+  # generate a client, so this has to look like Postgres. Nothing in CI opens
+  # a connection: every page is force-dynamic, so the build never queries.
+  DATABASE_URL: "postgresql://ci:ci@localhost:5432/ci"
+  DIRECT_URL: "postgresql://ci:ci@localhost:5432/ci"
 
 jobs:
   verify:
@@ -76,9 +78,6 @@ jobs:
       - name: Install
         run: npm ci
 
-      - name: Create the schema
-        run: npx prisma db push --skip-generate
-
       - name: Build
         run: npx next build
 
@@ -92,7 +91,7 @@ jobs:
       # commits one with --force, which is exactly when nobody is looking.
       - name: Check for committed env files and databases
         run: |
-          found=$(git ls-files | grep -E '(^|/)\.env($|\.)|\.db$|\.sqlite3?$' || true)
+          found=$(git ls-files | grep -E '(^|/)\.env($|\.(local|production|development))$|\.db$|\.sqlite3?$' || true)
           if [ -n "$found" ]; then
             echo "::error::These must never be committed:"
             echo "$found"
