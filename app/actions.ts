@@ -7,6 +7,7 @@ import { slugify } from "@/lib/types";
 import { deleteImage, saveImage } from "@/lib/saveImage";
 import { SETTING_KEYS, isBackgroundId } from "@/lib/backgrounds";
 import { HOURS_KEYS, isValidTime } from "@/lib/hours";
+import { MAX_OFFER_NOTE, MAX_OFFER_TEXT, OFFER_KEYS, isOfferTone } from "@/lib/offer";
 
 // Every mutation the owner can perform. Middleware has already rejected
 // anyone without a session before these run.
@@ -395,4 +396,50 @@ export async function saveHours(formData: FormData) {
 
   revalidatePath("/hours");
   redirect("/hours?saved=1");
+}
+
+// -------------------------------------------------------------------- offers
+
+/**
+ * Saves the offer / festival strip.
+ *
+ * Hiding keeps the text: the same Diwali or Sankranti message tends to come
+ * back, and retyping it every year is the sort of small friction that stops
+ * people using a feature at all.
+ */
+export async function saveOffer(formData: FormData) {
+  const offerText = text(formData, "text").slice(0, MAX_OFFER_TEXT);
+  const note = text(formData, "note").slice(0, MAX_OFFER_NOTE);
+  const tone = text(formData, "tone");
+  const isVisible = checked(formData, "isVisible");
+
+  if (!offerText) {
+    redirect(`/offers?error=${encodeURIComponent("Write the offer text first.")}`);
+  }
+
+  const rows: [string, string][] = [
+    [OFFER_KEYS.text, offerText],
+    [OFFER_KEYS.note, note],
+    [OFFER_KEYS.tone, isOfferTone(tone) ? tone : "festive"],
+    [OFFER_KEYS.isVisible, isVisible ? "true" : "false"],
+  ];
+
+  await prisma.$transaction(
+    rows.map(([key, value]) =>
+      prisma.setting.upsert({ where: { key }, create: { key, value }, update: { value } }),
+    ),
+  );
+
+  revalidatePath("/offers");
+  redirect("/offers?saved=1");
+}
+
+/** Removes the offer entirely, text and all. */
+export async function removeOffer() {
+  await prisma.setting.deleteMany({
+    where: { key: { in: [OFFER_KEYS.text, OFFER_KEYS.note, OFFER_KEYS.tone, OFFER_KEYS.isVisible] } },
+  });
+
+  revalidatePath("/offers");
+  redirect("/offers?saved=1");
 }

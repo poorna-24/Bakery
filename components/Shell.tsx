@@ -30,6 +30,9 @@ export default function Shell({
             <Link href="/" className="rounded-lg px-3 py-1.5 hover:bg-[var(--bg)]">
               Menu
             </Link>
+            <Link href="/offers" className="rounded-lg px-3 py-1.5 hover:bg-[var(--bg)]">
+              Offers
+            </Link>
             <Link href="/hours" className="rounded-lg px-3 py-1.5 hover:bg-[var(--bg)]">
               Hours
             </Link>
