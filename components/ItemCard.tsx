@@ -1,12 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { MenuItem } from "@/lib/types";
 import { priceLabel } from "@/lib/types";
 import VegMark from "./VegMark";
 
 export default function ItemCard({ item, onOpen }: { item: MenuItem; onOpen: () => void }) {
   const [loaded, setLoaded] = useState(false);
+  const imageRef = useRef<HTMLImageElement>(null);
+
+  // The photo fades in on its load event, but a cached image finishes loading
+  // before React attaches that handler — the event is missed and the card sits
+  // at opacity-0 forever, showing an empty tile. Catch that case on mount by
+  // asking the element whether it is already done.
+  useEffect(() => {
+    if (imageRef.current?.complete) setLoaded(true);
+  }, [item.imageUrl]);
 
   return (
     <button
@@ -19,6 +28,7 @@ export default function ItemCard({ item, onOpen }: { item: MenuItem; onOpen: () 
           <>
             {!loaded && <div className="shimmer absolute inset-0" />}
             <img
+              ref={imageRef}
               src={item.imageUrl}
               alt={item.name}
               loading="lazy"
