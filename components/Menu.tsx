@@ -247,8 +247,11 @@ export default function Menu({
         )}
       </header>
 
+      {/* Little top padding: the sticky bar above is invisible at the top of
+          the page but still occupies its 56px, which is breathing room enough
+          before the name. */}
       {!searchOpen && (
-        <section className="px-5 pb-7 pt-9 text-center">
+        <section className="px-5 pb-6 pt-1 text-center">
           <Wordmark name={shopName} size="hero" />
           <Flourish />
           <p className="mx-auto mt-4 max-w-[19rem] text-sm leading-relaxed text-[var(--muted)]">
@@ -256,7 +259,7 @@ export default function Menu({
           </p>
 
           {hours && hoursStatus && <OpenStatus hours={hours} initial={hoursStatus} />}
-          <p className="mt-7 text-[11px] font-semibold uppercase tracking-[0.3em] text-[var(--muted)]">
+          <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.3em] text-[var(--muted)]">
             Our Menu
           </p>
         </section>
