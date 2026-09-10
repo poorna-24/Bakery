@@ -1,16 +1,21 @@
 // Shared schema. An identical copy lives in bakery-customer/prisma/schema.prisma
 // so both apps generate the same client against the same database.
 //
-// To move to hosted Postgres later: change provider to "postgresql" in BOTH
-// repos and point DATABASE_URL at the new server. Nothing else changes.
+// Hosted on Supabase Postgres. Both repos must point at the same database:
+// the admin writes, the customer app reads, and that shared connection is the
+// only thing linking the two.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  // Normal queries go through the connection pooler: serverless functions open
+  // and close connections constantly and would exhaust Postgres otherwise.
+  url       = env("DATABASE_URL")
+  // Schema changes cannot run through a pooler, so they use a direct line.
+  directUrl = env("DIRECT_URL")
 }
 
 model Category {
