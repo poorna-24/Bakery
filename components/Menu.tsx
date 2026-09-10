@@ -194,7 +194,17 @@ export default function Menu({
 
       {offer && <OfferBanner offer={offer} />}
 
-      <header className="sticky top-0 z-30 border-b border-[var(--line)] bar-surface backdrop-blur">
+      {/* The bar only paints itself once it has something to show. At the top
+          of the page the name is still hidden in the hero, so a solid strip
+          with one lone search icon reads as an empty box — obvious on a wide
+          screen, where it spans the whole width. */}
+      <header
+        className={`sticky top-0 z-30 border-b transition-colors duration-300 ${
+          pastHero || searchOpen
+            ? "bar-surface border-[var(--line)] backdrop-blur"
+            : "border-transparent"
+        }`}
+      >
         <div className="grid h-14 grid-cols-[2.75rem_1fr_2.75rem] items-center px-2">
           <span aria-hidden="true" />
 
@@ -212,7 +222,11 @@ export default function Menu({
             type="button"
             onClick={searchOpen ? closeSearch : openSearch}
             aria-label={searchOpen ? "Close search" : "Search the menu"}
-            className="grid h-11 w-11 place-items-center justify-self-end rounded-full active:bg-[var(--line)]"
+            className={`grid h-11 w-11 place-items-center justify-self-end rounded-full transition-colors active:bg-[var(--line)] ${
+              // Floating over the page with no bar behind it, the icon needs
+              // its own backdrop to stay legible on a photo background.
+              pastHero || searchOpen ? "" : "bar-surface shadow-sm"
+            }`}
           >
             {searchOpen ? <CloseIcon /> : <SearchIcon />}
           </button>
