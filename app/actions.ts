@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { slugify } from "@/lib/types";
-import { deleteImage, saveImage } from "@/lib/saveImage";
+import { deleteImage, saveImage, saveImageFromUrl } from "@/lib/saveImage";
 import { SETTING_KEYS, isBackgroundId } from "@/lib/backgrounds";
 import { HOURS_KEYS, isValidTime } from "@/lib/hours";
 import { MAX_OFFER_NOTE, MAX_OFFER_TEXT, OFFER_KEYS, isOfferTone } from "@/lib/offer";
@@ -130,6 +130,22 @@ export async function deleteCategory(formData: FormData) {
 // --------------------------------------------------------------------- items
 
 /** Variants arrive as parallel arrays from repeated form fields. */
+/**
+ * Resolves the photo for an item, whichever way the owner supplied it.
+ *
+ * A chosen file wins over a pasted link: if both are filled in, the file is
+ * the more deliberate action — you have to go and find it.
+ */
+async function resolveImage(formData: FormData) {
+  const file = formData.get("image") as File | null;
+  if (file && file.size > 0) return saveImage(file);
+
+  const link = text(formData, "imageLink");
+  if (link) return saveImageFromUrl(link);
+
+  return null;
+}
+
 function readVariants(formData: FormData) {
   const labels = formData.getAll("variantLabel").map((value) => String(value).trim());
   const prices = formData.getAll("variantPrice").map((value) => Number.parseFloat(String(value)));
@@ -145,9 +161,9 @@ export async function createItem(formData: FormData) {
   const name = text(formData, "name");
   if (!categoryId || !name) return;
 
-  const saved = await saveImage(formData.get("image") as File | null);
+  const saved = await resolveImage(formData);
   if (saved && "error" in saved) {
-    redirect(`/categories/${categoryId}?error=${encodeURIComponent(saved.error)}`);
+    redirect(`/categories/${categoryId}/new?error=${encodeURIComponent(saved.error)}`);
   }
 
   const last = await prisma.item.findFirst({
@@ -186,7 +202,7 @@ export async function updateItem(formData: FormData) {
   const existing = await prisma.item.findUnique({ where: { id } });
   if (!existing) return;
 
-  const saved = await saveImage(formData.get("image") as File | null);
+  const saved = await resolveImage(formData);
   if (saved && "error" in saved) {
     redirect(`/items/${id}?error=${encodeURIComponent(saved.error)}`);
   }

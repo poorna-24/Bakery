@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { mkdtemp, readFile, readdir, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { deleteImage, saveImage } from "./saveImage";
+import { deleteImage, saveImage, saveImageFromUrl } from "./saveImage";
 import { MAX_IMAGE_BYTES, uploadsDir } from "./storage";
 
 // saveImage writes real files, so each test gets its own throwaway folder
@@ -145,5 +145,94 @@ describe("deleteImage", () => {
     await deleteImage("/uploads/../bakery.db");
 
     await expect(readFile(victim, "utf8")).resolves.toBe("pretend database");
+  });
+});
+
+describe("saveImageFromUrl", () => {
+  const realFetch = globalThis.fetch;
+
+  function respondWith(body: Uint8Array, headers: Record<string, string>, status = 200) {
+    globalThis.fetch = (async () =>
+      new Response(status === 200 ? body : null, { status, headers })) as typeof fetch;
+  }
+
+  afterEach(() => {
+    globalThis.fetch = realFetch;
+  });
+
+  it("refuses a bad link without fetching anything", async () => {
+    let called = false;
+    globalThis.fetch = (async () => {
+      called = true;
+      return new Response();
+    }) as typeof fetch;
+
+    const result = await saveImageFromUrl("http://169.254.169.254/latest/meta-data/");
+
+    expect(result).toEqual({ error: expect.stringMatching(/private address/i) });
+    expect(called, "must not fetch an address it already rejected").toBe(false);
+  });
+
+  it("saves an image the link actually returns", async () => {
+    const bytes = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0x11]);
+    respondWith(bytes, { "content-type": "image/jpeg" });
+
+    const result = await saveImageFromUrl("https://example.com/cake.jpg");
+    if (!result || "error" in result) throw new Error("expected a saved file");
+
+    expect(result.url).toMatch(/^\/uploads\/[0-9a-f-]{36}\.jpg$/);
+    const onDisk = await readFile(path.join(uploadsDir(), path.basename(result.url)));
+    expect(new Uint8Array(onDisk)).toEqual(bytes);
+  });
+
+  // The commonest wrong link returns a web page, not a picture.
+  it("refuses a link that returns a page instead of an image", async () => {
+    respondWith(new Uint8Array([1]), { "content-type": "text/html; charset=utf-8" });
+
+    expect(await saveImageFromUrl("https://example.com/gallery")).toEqual({
+      error: expect.stringMatching(/not an image/i),
+    });
+  });
+
+  it("refuses a link that errors", async () => {
+    respondWith(new Uint8Array(), { "content-type": "image/jpeg" }, 404);
+
+    expect(await saveImageFromUrl("https://example.com/gone.jpg")).toEqual({
+      error: expect.stringContaining("404"),
+    });
+  });
+
+  it("refuses an image over the size limit", async () => {
+    respondWith(new Uint8Array(10), {
+      "content-type": "image/jpeg",
+      "content-length": String(MAX_IMAGE_BYTES + 1),
+    });
+
+    expect(await saveImageFromUrl("https://example.com/huge.jpg")).toEqual({
+      error: expect.stringContaining("5 MB"),
+    });
+  });
+
+  // A server can understate content-length, or omit it entirely, so the real
+  // byte count has to be checked after the download too.
+  it("refuses an oversized image even when the header lies", async () => {
+    respondWith(new Uint8Array(MAX_IMAGE_BYTES + 1), {
+      "content-type": "image/jpeg",
+      "content-length": "10",
+    });
+
+    expect(await saveImageFromUrl("https://example.com/sneaky.jpg")).toEqual({
+      error: expect.stringContaining("5 MB"),
+    });
+  });
+
+  it("reports a link it cannot reach at all", async () => {
+    globalThis.fetch = (async () => {
+      throw new Error("getaddrinfo ENOTFOUND");
+    }) as typeof fetch;
+
+    expect(await saveImageFromUrl("https://no-such-host.example/cake.jpg")).toEqual({
+      error: expect.stringMatching(/could not reach/i),
+    });
   });
 });

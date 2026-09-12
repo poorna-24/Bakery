@@ -35,12 +35,26 @@ export default function CategoryRow({
       <form action={updateCategory} onSubmit={() => setMode("view")} className="space-y-3 p-4">
         <input type="hidden" name="id" value={category.id} />
         <div>
-          <label className="label">Category name</label>
-          <input name="name" defaultValue={category.name} required className="field" autoFocus />
+          <label className="label" htmlFor={`name-${category.id}`}>Category name</label>
+          <input
+            id={`name-${category.id}`}
+            name="name"
+            defaultValue={category.name}
+            required
+            className="field"
+            autoFocus
+          />
         </div>
         <div>
-          <label className="label">Description (shown under the heading)</label>
-          <input name="description" defaultValue={category.description} className="field" />
+          <label className="label" htmlFor={`description-${category.id}`}>
+            Description (shown under the heading)
+          </label>
+          <input
+            id={`description-${category.id}`}
+            name="description"
+            defaultValue={category.description}
+            className="field"
+          />
         </div>
         <div className="flex gap-2">
           <button type="submit" className="btn-primary">Save</button>
@@ -70,8 +84,10 @@ export default function CategoryRow({
                 <form action={deleteCategory} className="flex items-end gap-2">
                   <input type="hidden" name="id" value={category.id} />
                   <div>
-                    <label className="label">Move items to</label>
-                    <select name="moveTo" className="field" required>
+                    <label className="label" htmlFor={`moveTo-${category.id}`}>
+                      Move items to
+                    </label>
+                    <select id={`moveTo-${category.id}`} name="moveTo" className="field" required>
                       {otherCategories.map((other) => (
                         <option key={other.id} value={other.id}>{other.name}</option>
                       ))}
