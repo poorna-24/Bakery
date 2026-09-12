@@ -62,3 +62,54 @@ describe("the photo becomes visible", () => {
     expect(screen.queryByAltText("Choco Truffle Cake")).not.toBeInTheDocument();
   });
 });
+
+describe("what the card marks on the tile", () => {
+  it("badges an eggless item", () => {
+    render(<ItemCard item={item({ isEggless: true })} onOpen={() => {}} />);
+    expect(screen.getByText("EGGLESS")).toBeInTheDocument();
+  });
+
+  it("badges a bestseller", () => {
+    render(<ItemCard item={item({ isBestseller: true })} onOpen={() => {}} />);
+    expect(screen.getByText("★ BESTSELLER")).toBeInTheDocument();
+  });
+
+  it("shows neither badge on an ordinary item", () => {
+    render(<ItemCard item={item()} onOpen={() => {}} />);
+    expect(screen.queryByText("EGGLESS")).not.toBeInTheDocument();
+    expect(screen.queryByText("★ BESTSELLER")).not.toBeInTheDocument();
+  });
+
+  // Sold out has to read at a glance: the label alone is easy to miss when
+  // the photo still looks appetising, so the picture is greyed as well.
+  it("greys the photo and covers it when the item is sold out", () => {
+    render(<ItemCard item={item({ isAvailable: false })} onOpen={() => {}} />);
+
+    expect(screen.getByText("Sold out")).toBeInTheDocument();
+    expect(screen.getByAltText("Choco Truffle Cake")).toHaveClass("grayscale");
+  });
+
+  it("leaves an available item's photo in colour", () => {
+    render(<ItemCard item={item()} onOpen={() => {}} />);
+    expect(screen.getByAltText("Choco Truffle Cake")).not.toHaveClass("grayscale");
+  });
+});
+
+describe("tapping the card", () => {
+  it("opens the detail sheet", () => {
+    const onOpen = vi.fn();
+    render(<ItemCard item={item()} onOpen={onOpen} />);
+
+    fireEvent.click(screen.getByRole("button"));
+    expect(onOpen).toHaveBeenCalledTimes(1);
+  });
+
+  // Sold-out items stay tappable — people still want the price and the photo.
+  it("opens even when the item is sold out", () => {
+    const onOpen = vi.fn();
+    render(<ItemCard item={item({ isAvailable: false })} onOpen={onOpen} />);
+
+    fireEvent.click(screen.getByRole("button"));
+    expect(onOpen).toHaveBeenCalledTimes(1);
+  });
+});

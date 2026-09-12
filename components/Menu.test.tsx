@@ -1,10 +1,11 @@
-import { describe, expect, it } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Menu from "./Menu";
 import type { MenuCategory } from "@/lib/types";
 import { DEFAULT_APPEARANCE } from "@/lib/backgrounds";
 import type { Offer } from "@/lib/offer";
+import type { ShopHours, ShopStatus } from "@/lib/hours";
 
 const categories: MenuCategory[] = [
   {
@@ -344,5 +345,279 @@ describe("asking about one item", () => {
     expect(url.hostname).toBe("wa.me");
     expect(url.searchParams.get("text")).toContain("Choco Truffle Cake");
     expect(url.searchParams.get("text")).toContain("SHIVAM BAKERY");
+  });
+});
+
+describe("the open / closed badge", () => {
+  const hours: ShopHours = { open: "07:00", close: "21:00", closedDays: [] };
+  const status: ShopStatus = { isOpen: true, label: "Open now", detail: "7:00 am – 9:00 pm" };
+
+  it("appears once the owner has set opening times", () => {
+    renderMenu({ hours, hoursStatus: status });
+
+    expect(screen.getByText("Open now")).toBeInTheDocument();
+    expect(screen.getByText("7:00 am – 9:00 pm")).toBeInTheDocument();
+  });
+
+  it("is left out entirely when no times are configured", () => {
+    renderMenu();
+    expect(screen.queryByText("Open now")).not.toBeInTheDocument();
+  });
+
+  // Half-configured hours are no better than none — the badge would have
+  // nothing to say — so it stays hidden rather than rendering blank.
+  it("stays hidden when the times are set but the status is missing", () => {
+    renderMenu({ hours, hoursStatus: null });
+    expect(screen.queryByText("Open now")).not.toBeInTheDocument();
+  });
+});
+
+/**
+ * The chip rail and the scroll-spy that drives it. jsdom has no layout engine:
+ * every box measures zero and nothing scrolls, so the geometry these read has
+ * to be supplied by hand. Without it the centring never runs at all.
+ */
+describe("the category chips", () => {
+  function rect(part: Partial<DOMRect>): DOMRect {
+    return {
+      top: 0, bottom: 0, left: 0, right: 0, width: 0, height: 0, x: 0, y: 0,
+      toJSON: () => ({}), ...part,
+    } as DOMRect;
+  }
+
+  /** Puts each section's top edge where the test wants it, in order. */
+  function placeSections(...tops: number[]) {
+    document.querySelectorAll<HTMLElement>("section[data-slug]").forEach((node, index) => {
+      node.getBoundingClientRect = () => rect({ top: tops[index] ?? 0 });
+    });
+  }
+
+  /** A page long enough that the viewport is not already at the bottom. */
+  function makePageLong() {
+    Object.defineProperty(document.documentElement, "scrollHeight", {
+      value: 5000,
+      configurable: true,
+    });
+  }
+
+  function chip(name: string) {
+    return screen.getByRole("button", { name });
+  }
+
+  /** Lets the rAF-throttled scroll handler run and settle. */
+  async function scrollPage() {
+    await act(async () => {
+      window.dispatchEvent(new Event("scroll"));
+      await new Promise((resolve) => setTimeout(resolve, 40));
+    });
+  }
+
+  beforeEach(() => {
+    // jsdom does not implement this; the component only ever calls it.
+    Element.prototype.scrollIntoView = vi.fn();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    Reflect.deleteProperty(document.documentElement, "scrollHeight");
+  });
+
+  it("lists one chip per category", () => {
+    renderMenu();
+
+    expect(chip("Cakes")).toBeInTheDocument();
+    expect(chip("Hot & Fresh Bites")).toBeInTheDocument();
+  });
+
+  it("scrolls to the section and marks the chip as current when tapped", () => {
+    renderMenu();
+
+    fireEvent.click(chip("Hot & Fresh Bites"));
+
+    expect(Element.prototype.scrollIntoView).toHaveBeenCalledWith({
+      behavior: "smooth",
+      block: "start",
+    });
+    expect(chip("Hot & Fresh Bites")).toHaveAttribute("aria-current", "true");
+    expect(chip("Cakes")).not.toHaveAttribute("aria-current");
+  });
+
+  it("hides the rail while searching, since there is only one list of results", () => {
+    renderMenu();
+    expect(chip("Cakes")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText("Search the menu"));
+    fireEvent.change(screen.getByPlaceholderText(/search/i), { target: { value: "puff" } });
+
+    expect(screen.queryByRole("button", { name: "Cakes" })).not.toBeInTheDocument();
+  });
+
+  it("has no rail at all when the menu is empty", () => {
+    renderMenu({ categories: [] });
+    expect(screen.queryByRole("button", { name: "Cakes" })).not.toBeInTheDocument();
+  });
+
+  describe("following the page as it scrolls", () => {
+    it("highlights whichever section is under the header", async () => {
+      renderMenu();
+      makePageLong();
+      // Cakes is under the header; the bites section is still well below it.
+      placeSections(0, 500);
+
+      await scrollPage();
+
+      expect(chip("Cakes")).toHaveAttribute("aria-current", "true");
+    });
+
+    it("moves the highlight on once the next section reaches the header", async () => {
+      renderMenu();
+      makePageLong();
+      placeSections(-600, 100);
+
+      await scrollPage();
+
+      expect(chip("Hot & Fresh Bites")).toHaveAttribute("aria-current", "true");
+    });
+
+    // Otherwise the chips flicker through every category the page flies past
+    // on the way to the one that was actually tapped.
+    it("ignores readings taken while a tapped jump is still in flight", async () => {
+      renderMenu();
+      makePageLong();
+
+      fireEvent.click(chip("Hot & Fresh Bites"));
+      placeSections(0, 500); // mid-flight, Cakes is still the one on screen
+
+      await scrollPage();
+
+      expect(chip("Hot & Fresh Bites")).toHaveAttribute("aria-current", "true");
+    });
+
+    // The last section is often too short to ever reach the header line, so
+    // reaching the foot of the page is what says you are looking at it.
+    it("highlights the last section once the page bottoms out", async () => {
+      renderMenu();
+      placeSections(0, 500); // both above the line, but the page is at its end
+
+      await scrollPage();
+
+      expect(chip("Hot & Fresh Bites")).toHaveAttribute("aria-current", "true");
+    });
+
+    // The jump lock cannot be held forever: a short last section may never
+    // reach the header line, so the landing is never confirmed and the chips
+    // would stay frozen on the tapped one.
+    it("lets the chips follow the page again once the jump has had time to land", async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      try {
+        renderMenu();
+        makePageLong();
+
+        fireEvent.click(chip("Cakes"));
+        act(() => {
+          vi.advanceTimersByTime(1000);
+        });
+
+        placeSections(-600, 100);
+        await act(async () => {
+          window.dispatchEvent(new Event("scroll"));
+          await vi.advanceTimersByTimeAsync(50);
+        });
+
+        expect(chip("Hot & Fresh Bites")).toHaveAttribute("aria-current", "true");
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it("stops measuring once the menu leaves the screen", async () => {
+      const { unmount } = renderMenu();
+      makePageLong();
+
+      // Unmount with a frame still pending; nothing should run afterwards.
+      act(() => {
+        window.dispatchEvent(new Event("scroll"));
+      });
+      unmount();
+
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 40));
+      });
+    });
+  });
+
+  describe("keeping the active chip in view on the rail", () => {
+    /**
+     * @param chipBox where the Cakes chip sits relative to the rail box,
+     *   which these tests run from 0 to 320.
+     *
+     * The scroll-spy makes the last chip active on mount, so Cakes is the one
+     * a tap actually moves the rail to.
+     */
+    function stubRail(chipBox: { left: number; right: number; offsetLeft: number }) {
+      const rail = document.querySelector<HTMLElement>("[data-chip]")!.parentElement!;
+
+      Object.defineProperty(rail, "clientWidth", { value: 320, configurable: true });
+      Object.defineProperty(rail, "scrollWidth", { value: 900, configurable: true });
+      rail.getBoundingClientRect = () => rect({ left: 0, right: 320 });
+      rail.scrollTo = vi.fn();
+
+      const target = rail.querySelector<HTMLElement>('[data-chip="cakes"]')!;
+      Object.defineProperty(target, "offsetLeft", { value: chipBox.offsetLeft, configurable: true });
+      Object.defineProperty(target, "clientWidth", { value: 120, configurable: true });
+      target.getBoundingClientRect = () => rect({ left: chipBox.left, right: chipBox.right });
+
+      return rail;
+    }
+
+    it("scrolls a chip that is off the right-hand edge into the middle", () => {
+      renderMenu();
+      const rail = stubRail({ left: 400, right: 520, offsetLeft: 400 });
+
+      fireEvent.click(chip("Cakes"));
+
+      // 400 - 320/2 + 120/2 — centred, and well inside the scrollable width.
+      expect(rail.scrollTo).toHaveBeenCalledWith({ left: 300, behavior: "smooth" });
+    });
+
+    it("never scrolls past the start of the rail", () => {
+      renderMenu();
+      const rail = stubRail({ left: -200, right: -80, offsetLeft: 0 });
+
+      fireEvent.click(chip("Cakes"));
+
+      expect(rail.scrollTo).toHaveBeenCalledWith({ left: 0, behavior: "smooth" });
+    });
+
+    it("never scrolls past the end of the rail", () => {
+      renderMenu();
+      const rail = stubRail({ left: 880, right: 1000, offsetLeft: 880 });
+
+      // Centring would want 820, but the rail can only scroll 900 - 320 = 580.
+      fireEvent.click(chip("Cakes"));
+
+      expect(rail.scrollTo).toHaveBeenCalledWith({ left: 580, behavior: "smooth" });
+    });
+
+    it("leaves the rail alone when the chip is already fully visible", () => {
+      renderMenu();
+      const rail = stubRail({ left: 120, right: 240, offsetLeft: 120 });
+
+      fireEvent.click(chip("Cakes"));
+
+      expect(rail.scrollTo).not.toHaveBeenCalled();
+    });
+
+    // On the very first paint the rail can still be mid-layout at zero width,
+    // and centring against that throws the first chip half off the screen.
+    it("does not centre against a rail that has not been laid out yet", () => {
+      renderMenu();
+      const rail = document.querySelector<HTMLElement>("[data-chip]")!.parentElement!;
+      rail.scrollTo = vi.fn();
+
+      fireEvent.click(chip("Cakes"));
+
+      expect(rail.scrollTo).not.toHaveBeenCalled();
+    });
   });
 });
