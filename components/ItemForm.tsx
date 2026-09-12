@@ -38,12 +38,24 @@ export default function ItemForm({
   );
   const [preview, setPreview] = useState<string | null>(values.imageUrl);
   const [removeImage, setRemoveImage] = useState(false);
+  const [source, setSource] = useState<"file" | "link">("file");
+  const [link, setLink] = useState("");
 
   function pickImage(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
     setPreview(URL.createObjectURL(file));
     setRemoveImage(false);
+    // Only one source can win; clear the other so the form matches what will
+    // actually be saved.
+    setLink("");
+  }
+
+  function pasteLink(value: string) {
+    setLink(value);
+    setRemoveImage(false);
+    // Show it straight away — a typo is obvious the moment nothing appears.
+    setPreview(value.trim() ? value.trim() : values.imageUrl);
   }
 
   return (
@@ -134,17 +146,57 @@ export default function ItemForm({
             )}
           </div>
 
-          <div className="space-y-2">
-            <input
-              type="file"
-              name="image"
-              accept="image/jpeg,image/png,image/webp,image/avif"
-              onChange={pickImage}
-              className="block text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-[var(--accent)] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white"
-            />
-            <p className="text-xs text-[var(--muted)]">
-              JPG, PNG, WebP or AVIF · up to 5 MB · square photos look best on the menu.
-            </p>
+          <div className="min-w-[16rem] flex-1 space-y-2">
+            <div className="inline-flex rounded-lg border border-[var(--line)] p-0.5">
+              {(["file", "link"] as const).map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => setSource(option)}
+                  aria-pressed={source === option}
+                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                    source === option
+                      ? "bg-[var(--accent)] text-white"
+                      : "text-[var(--muted)] hover:text-[var(--text)]"
+                  }`}
+                >
+                  {option === "file" ? "Upload a file" : "Paste a link"}
+                </button>
+              ))}
+            </div>
+
+            {/* Both inputs stay mounted so a half-filled one is not lost when
+                the owner flicks between them; only the active one is shown. */}
+            <div className={source === "file" ? "space-y-2" : "hidden"}>
+              <input
+                type="file"
+                name="image"
+                accept="image/jpeg,image/png,image/webp,image/avif"
+                onChange={pickImage}
+                className="block text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-[var(--accent)] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white"
+              />
+              <p className="text-xs text-[var(--muted)]">
+                JPG, PNG, WebP or AVIF · up to 5 MB · square photos look best on the menu.
+              </p>
+            </div>
+
+            <div className={source === "link" ? "space-y-2" : "hidden"}>
+              <input
+                type="url"
+                name="imageLink"
+                value={link}
+                onChange={(event) => pasteLink(event.target.value)}
+                placeholder="https://example.com/cake.jpg"
+                className="field"
+              />
+              <p className="text-xs leading-relaxed text-[var(--muted)]">
+                The picture is copied into your own storage, so it keeps working
+                even if the original page changes. In Google Images, open the
+                picture first, then right-click it and choose{" "}
+                <strong>Copy image address</strong> — the address of the results
+                page is not an image.
+              </p>
+            </div>
             {values.imageUrl && !removeImage && (
               <button
                 type="button"

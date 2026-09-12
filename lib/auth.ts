@@ -32,7 +32,12 @@ export async function checkCredentials(email: string, password: string): Promise
   const hash = process.env.ADMIN_PASSWORD_HASH ?? "";
   const plain = process.env.ADMIN_PASSWORD ?? "";
 
-  const emailOk = safeEqual(email.trim().toLowerCase(), expectedEmail.trim().toLowerCase());
+  // An unset ADMIN_EMAIL would compare "" against "" and pass, leaving the
+  // password as the only thing standing between a stranger and the dashboard.
+  // A half-configured environment must refuse everyone, not almost everyone.
+  const emailOk =
+    expectedEmail.trim().length > 0 &&
+    safeEqual(email.trim().toLowerCase(), expectedEmail.trim().toLowerCase());
   const passwordOk = hash
     ? await bcrypt.compare(password, hash)
     : plain.length > 0 && safeEqual(password, plain);

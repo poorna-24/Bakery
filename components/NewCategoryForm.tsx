@@ -1,11 +1,12 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { createCategory } from "@/app/actions";
 
 export default function NewCategoryForm() {
   const [open, setOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const fieldId = useId();
 
   if (!open) {
     return (
@@ -25,8 +26,9 @@ export default function NewCategoryForm() {
       className="card mt-4 space-y-3 p-4"
     >
       <div>
-        <label className="label">Category name</label>
+        <label className="label" htmlFor={`${fieldId}-name`}>Category name</label>
         <input
+          id={`${fieldId}-name`}
           name="name"
           required
           autoFocus
@@ -35,8 +37,11 @@ export default function NewCategoryForm() {
         />
       </div>
       <div>
-        <label className="label">Description (optional)</label>
+        <label className="label" htmlFor={`${fieldId}-description`}>
+          Description (optional)
+        </label>
         <input
+          id={`${fieldId}-description`}
           name="description"
           placeholder="One line shown under the heading on the menu"
           className="field"

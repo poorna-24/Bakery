@@ -96,11 +96,42 @@ export function publicIdFromUrl(url: string): string | null {
   if (!afterUpload) return null;
 
   const segments = afterUpload.split("/");
-  // Drop transformation segments and the version, both optional.
+
+  // Both the transformation list and the version are optional, so the id can
+  // start at any of the first three positions. Dropping a fixed number of
+  // segments loses the first folder when neither is present.
   const versionAt = segments.findIndex((segment) => /^v\d+$/.test(segment));
-  const idParts = versionAt >= 0 ? segments.slice(versionAt + 1) : segments.slice(1);
+  const looksLikeTransformation = (segment: string) =>
+    /^[a-z]{1,3}_[^/]+$/.test(segment) || segment.includes(",");
+
+  const idParts =
+    versionAt >= 0
+      ? segments.slice(versionAt + 1)
+      : segments.slice(looksLikeTransformation(segments[0] ?? "") ? 1 : 0);
   if (idParts.length === 0) return null;
 
   const joined = idParts.join("/");
   return joined.replace(/\.[a-z0-9]+$/i, "") || null;
+}
+
+/**
+ * Uploads an image Cloudinary fetches itself, from a public address.
+ *
+ * Handing Cloudinary the URL rather than downloading it here is deliberate:
+ * their servers follow redirects, deal with hosts that reject unfamiliar
+ * clients, and reject anything that is not really an image — and the request
+ * comes from their network, not ours.
+ */
+export async function uploadToCloudinaryFromUrl(remoteUrl: string): Promise<CloudUpload> {
+  const api = client();
+
+  const result = await api.uploader.upload(remoteUrl, {
+    folder: CLOUDINARY_FOLDER,
+    resource_type: "image",
+    use_filename: false,
+    unique_filename: true,
+    overwrite: false,
+  });
+
+  return { url: deliveryUrl(result.public_id), publicId: result.public_id };
 }
