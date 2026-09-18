@@ -11,7 +11,7 @@
     "setup": "docker compose --profile setup run --rm migrate",
     "seed": "docker compose --profile setup run --rm migrate npm run db:seed",
     "dev": "docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d",
-    "dev:build": "docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build",
+    "dev:build": "docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build --renew-anon-volumes",
     "dev:logs": "docker compose -f docker-compose.yml -f docker-compose.dev.yml logs -f",
     "dev:stop": "docker compose -f docker-compose.yml -f docker-compose.dev.yml down"
   }
