@@ -22,6 +22,9 @@ FROM base AS deps
 # `prisma generate`, which reads it. Without it the install fails outright.
 COPY package.json package-lock.json ./
 COPY prisma ./prisma
+# postinstall runs prisma through scripts/load-root-env.mjs, so the script has
+# to be here before npm ci — otherwise the install dies looking for it.
+COPY scripts ./scripts
 
 # `prisma generate` downloads its query engine over HTTPS, which fails behind a
 # network that re-signs TLS with its own root — the container trusts the public
@@ -66,10 +69,10 @@ ARG DIRECT_URL="postgresql://build:build@127.0.0.1:5432/build"
 ENV DATABASE_URL=$DATABASE_URL
 ENV DIRECT_URL=$DIRECT_URL
 
-# The only NEXT_PUBLIC_* value this app uses. It is inlined as the pages
-# compile, so it has to be supplied now rather than at run time.
-ARG NEXT_PUBLIC_SHOP_NAME="Bakery"
-ENV NEXT_PUBLIC_SHOP_NAME=$NEXT_PUBLIC_SHOP_NAME
+# The shop's details are deliberately not baked in here. They are read on the
+# server at request time, so the compose file passes them as ordinary runtime
+# environment variables — correcting a phone number needs a restart, not a
+# rebuild of this image.
 
 # This app has no public/ directory, and the runner's COPY needs one to exist.
 RUN mkdir -p public

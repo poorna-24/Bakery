@@ -25,16 +25,16 @@ vi.mock("next/link", () => ({
 
 const { default: Shell } = await import("./Shell");
 
-const originalShopName = process.env.NEXT_PUBLIC_SHOP_NAME;
+const originalShopName = process.env.SHOP_NAME;
 
 beforeEach(() => {
-  process.env.NEXT_PUBLIC_SHOP_NAME = "SHIVAM BAKERY";
+  process.env.SHOP_NAME = "SHIVAM BAKERY";
 });
 
 afterEach(() => {
   vi.clearAllMocks();
-  if (originalShopName === undefined) delete process.env.NEXT_PUBLIC_SHOP_NAME;
-  else process.env.NEXT_PUBLIC_SHOP_NAME = originalShopName;
+  if (originalShopName === undefined) delete process.env.SHOP_NAME;
+  else process.env.SHOP_NAME = originalShopName;
 });
 
 describe("the frame", () => {
@@ -56,7 +56,7 @@ describe("the frame", () => {
 
   // A missing name should read as a generic admin, not "undefined Admin".
   it("falls back to a plain name when none is configured", () => {
-    delete process.env.NEXT_PUBLIC_SHOP_NAME;
+    delete process.env.SHOP_NAME;
 
     render(<Shell title="Menu">content</Shell>);
 

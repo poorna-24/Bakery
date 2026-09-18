@@ -1,3 +1,10 @@
+import { loadRootEnv } from "./scripts/load-root-env.mjs";
+
+// One env file lives at the repository root. Next only reads its own folder,
+// so it is loaded here — before the config object is built, so everything
+// below and every server module can see it.
+loadRootEnv();
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,

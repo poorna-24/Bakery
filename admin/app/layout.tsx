@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: `Admin — ${process.env.NEXT_PUBLIC_SHOP_NAME ?? "Bakery"}`,
+  title: `Admin — ${process.env.SHOP_NAME ?? "Bakery"}`,
   description: "Manage the bakery menu.",
   // The owner's dashboard must never turn up in a search result.
   robots: { index: false, follow: false, nocache: true },

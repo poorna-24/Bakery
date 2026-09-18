@@ -17,7 +17,7 @@ and a starting point if the apps ever need to run somewhere other than Vercel.
 ## First run
 
 ```bash
-cp .env.docker.example .env
+cp .env.example .env
 ```
 
 Fill in `.env` — at minimum `POSTGRES_PASSWORD`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`
@@ -77,13 +77,16 @@ be served: a production build, behind a real Postgres.
 
 ## Things worth knowing
 
-**Shop details are baked in at build time.** Everything beginning with
-`NEXT_PUBLIC_` is compiled into the customer bundle, so changing the shop name
-or phone number in `.env` needs a rebuild, not a restart:
+**Shop details are runtime values.** The shop name, phone, address and credit
+line are read on the server and passed down as props, so editing them in `.env`
+needs a restart, not a rebuild:
 
 ```bash
-docker compose up -d --build customer
+docker compose up -d customer
 ```
+
+They used to be `NEXT_PUBLIC_*`, which compiled them into the bundle and meant
+rebuilding an image to correct a phone number.
 
 **Photos.** With `CLOUDINARY_URL` empty, uploads are written to the `uploads`
 volume, which both containers mount at `/data`. That shared mount is what lets
@@ -108,19 +111,17 @@ sitting loose on one machine.
 ```
 bakery/                     one repo, both apps
   docker-compose.yml        the stack: db + admin + customer, shared volumes
-  .env                      your filled-in copy (secrets — git-ignored)
-  .env.docker.example       the template
+  .env                      the one env file for everything (git-ignored)
+  .env.example       the template
   docker/no-extra-ca.pem    placeholder for the optional corporate CA
   data/                     local uploads and the pre-Postgres backup (ignored)
   scripts/                  set-database-url.mjs and friends
   admin/
     Dockerfile
     .dockerignore
-    .env.local              local secrets (git-ignored)
   customer/
     Dockerfile
     .dockerignore
-    .env.local              local secrets (git-ignored)
 ```
 
 ## Deploying

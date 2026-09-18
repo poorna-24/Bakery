@@ -18,12 +18,12 @@ const original = { ...process.env };
 
 beforeEach(() => {
   settingRows = [];
-  process.env.NEXT_PUBLIC_SHOP_NAME = "SHIVAM BAKERY";
-  process.env.NEXT_PUBLIC_SHOP_TAGLINE = "Fresh every morning.";
-  process.env.NEXT_PUBLIC_SHOP_ADDRESS = "Cherial, Telangana";
-  process.env.NEXT_PUBLIC_SHOP_MAP_URL = "https://maps.example/shop";
-  process.env.NEXT_PUBLIC_SHOP_PHONE = "+91 76660 93143";
-  process.env.NEXT_PUBLIC_SHOP_WHATSAPP = "+917666093143";
+  process.env.SHOP_NAME = "SHIVAM BAKERY";
+  process.env.SHOP_TAGLINE = "Fresh every morning.";
+  process.env.SHOP_ADDRESS = "Cherial, Telangana";
+  process.env.SHOP_MAP_URL = "https://maps.example/shop";
+  process.env.SHOP_PHONE = "+91 76660 93143";
+  process.env.SHOP_WHATSAPP = "+917666093143";
 });
 
 afterEach(() => {
@@ -47,7 +47,7 @@ describe("getShop", () => {
   // A fresh clone with nothing configured should still render a page.
   it("falls back to safe defaults when nothing is configured", async () => {
     for (const key of Object.keys(process.env)) {
-      if (key.startsWith("NEXT_PUBLIC_SHOP_")) delete process.env[key];
+      if (key.startsWith("SHOP_")) delete process.env[key];
     }
 
     const shop = await getShop();

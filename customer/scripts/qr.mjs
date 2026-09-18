@@ -50,7 +50,7 @@ async function loadEnv() {
 await loadEnv();
 
 const url = process.argv[2] ?? process.env.CUSTOMER_APP_URL ?? "http://localhost:3000";
-const shopName = process.env.NEXT_PUBLIC_SHOP_NAME ?? "Our Bakery";
+const shopName = process.env.SHOP_NAME ?? "Our Bakery";
 const outDir = path.join(process.cwd(), "qr");
 
 if (url.includes("localhost")) {

@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000",
-    "build": "prisma generate && next build",
+    "build": "node scripts/load-root-env.mjs prisma generate && next build",
     "start": "next start -p 3000",
-    "postinstall": "prisma generate",
+    "postinstall": "node scripts/load-root-env.mjs prisma generate",
     "qr": "node scripts/qr.mjs",
     "test": "vitest run",
     "test:watch": "vitest",

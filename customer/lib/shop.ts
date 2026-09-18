@@ -12,12 +12,12 @@ export async function getShop(): Promise<ShopPayload> {
   const hours = toShopHours(rows);
 
   return {
-    name: process.env.NEXT_PUBLIC_SHOP_NAME ?? "Our Bakery",
-    tagline: process.env.NEXT_PUBLIC_SHOP_TAGLINE ?? "",
-    address: process.env.NEXT_PUBLIC_SHOP_ADDRESS ?? "",
-    mapUrl: process.env.NEXT_PUBLIC_SHOP_MAP_URL ?? "",
-    phone: process.env.NEXT_PUBLIC_SHOP_PHONE ?? "",
-    whatsapp: process.env.NEXT_PUBLIC_SHOP_WHATSAPP ?? "",
+    name: process.env.SHOP_NAME ?? "Our Bakery",
+    tagline: process.env.SHOP_TAGLINE ?? "",
+    address: process.env.SHOP_ADDRESS ?? "",
+    mapUrl: process.env.SHOP_MAP_URL ?? "",
+    phone: process.env.SHOP_PHONE ?? "",
+    whatsapp: process.env.SHOP_WHATSAPP ?? "",
     hours,
     status: hours ? shopStatus(hours, shopNow()) : null,
   };
