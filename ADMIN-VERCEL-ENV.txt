@@ -1,0 +1,31 @@
+VERCEL ENV VARS -> bakery-admin project
+Paste each Key/Value pair into Settings -> Environment Variables.
+Set every one to "Production and Preview".
+DELETE THIS FILE once they are all in.
+
+DATABASE_URL
+postgresql://postgres.norbzewexwojgwlfqyat:OTYvShhEOWDKt53j@aws-0-ap-south-1.pooler.supabase.com:6543/postgres?pgbouncer=true
+
+DIRECT_URL
+postgresql://postgres.norbzewexwojgwlfqyat:OTYvShhEOWDKt53j@aws-0-ap-south-1.pooler.supabase.com:5432/postgres
+
+CUSTOMER_APP_URL
+https://bakery-customer.vercel.app
+
+ADMIN_EMAIL
+owner@bakery.com
+
+ADMIN_PASSWORD_HASH
+$2a$10$TSbH.am0YVx3C/C4S.RLveXD2OyUBWUxV2QC44Lv..vN52U8RgX8G
+
+SESSION_SECRET
+ba7f7912cabc32cc91e94637960dbc0e18c2da0fbea89c925f86f40fd6d318f2d8ded5c6202a36b8ad91b1ebf0d90653
+
+CLOUDINARY_URL
+cloudinary://454577151936259:0ZmZptPXv9tQM8hIijLzJp3Y3LE@vl0mqfuz
+
+NEXT_PUBLIC_SHOP_NAME
+SHIVAM BAKERY
+
+Do NOT add ADMIN_PASSWORD - the hash replaces it. Delete that row if Vercel adds it.
+Do NOT add BAKERY_DATA_DIR - Cloudinary replaces it.
