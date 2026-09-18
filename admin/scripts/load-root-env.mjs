@@ -11,6 +11,7 @@
 // A missing file is not an error. In Docker and on Vercel there is no .env at
 // all — the platform supplies the variables — and this must quietly do nothing.
 
+import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -55,7 +56,6 @@ if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToP
 
   const [command, ...args] = process.argv.slice(2);
   if (command) {
-    const { spawnSync } = await import("node:child_process");
     const result = spawnSync(command, args, { stdio: "inherit", shell: true });
     process.exit(result.status ?? 1);
   }
