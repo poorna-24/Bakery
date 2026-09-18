@@ -1,18 +1,18 @@
 # Development overlay: hot reload instead of a production build.
 #
-#   npm run dev        start it
-#   npm run dev:logs   watch the output
+#   npm run docker:dev        start it (rebuilds, which the first run needs)
+#   npm run docker:logs       watch the output
 #
-# The plain `npm start` stack compiles both apps ahead of time, which is what
-# you want for checking the real thing — but it means every edit needs a
-# rebuild. This overlay swaps that for `next dev` against your working copy, so
-# a saved file refreshes the browser.
+# The plain stack compiles the app ahead of time, which is what you want for
+# checking the real thing — but it means every edit needs a rebuild. This
+# overlay swaps that for `next dev` against your working copy, so a saved file
+# refreshes the browser.
 #
 # It still uses the local throwaway Postgres, so experimenting here cannot
 # touch the live menu.
 
 services:
-  admin:
+  app:
     # The deps stage carries node_modules and a generated Prisma client, but no
     # compiled app — the source arrives through the mount below instead.
     build:
@@ -28,23 +28,10 @@ services:
       WATCHPACK_POLLING: "true"
       CHOKIDAR_USEPOLLING: "true"
     volumes:
-      - ./admin:/app
+      - .:/app
       # These two anonymous volumes sit on top of the bind mount and keep the
       # container's own copies. node_modules was built for Linux and would be
       # replaced by the Windows one otherwise; .next must stay separate or the
       # container and any host dev server would fight over the same folder.
-      - /app/node_modules
-      - /app/.next
-
-  customer:
-    build:
-      target: deps
-    command: npm run dev
-    environment:
-      HOSTNAME: 0.0.0.0
-      WATCHPACK_POLLING: "true"
-      CHOKIDAR_USEPOLLING: "true"
-    volumes:
-      - ./customer:/app
       - /app/node_modules
       - /app/.next
