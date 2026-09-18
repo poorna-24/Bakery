@@ -1,0 +1,27 @@
+# Node
+node_modules/
+
+# Next.js
+.next/
+out/
+build/
+
+# Secrets — every shape, at every level. Never relax these.
+.env
+.env.*
+!.env.example
+!.env.docker.example
+
+# Local data: the SQLite file from before Postgres, and uploaded photos.
+data/
+
+# Test and build output
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+
+# Editors and OS
+.DS_Store
+.vscode/
+.idea/
+npm-debug.log*
