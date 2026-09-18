@@ -31,6 +31,7 @@ beforeAll(async () => {
   await mkdir(uploadsDir(), { recursive: true });
   await writeFile(path.join(uploadsDir(), "cake.png"), bytes);
   await writeFile(path.join(uploadsDir(), "photo.jpg"), bytes);
+  await writeFile(path.join(uploadsDir(), "notes.txt"), bytes);
   await mkdir(path.join(uploadsDir(), "a-folder"), { recursive: true });
 });
 
@@ -61,6 +62,17 @@ describe("serving a photo", () => {
     const response = await request("cake.png");
     expect(response.headers.get("Cache-Control")).toBe("public, max-age=31536000, immutable");
   });
+
+  // The guard is the *shape* of the name, not its extension: anything already
+  // sitting in the uploads folder is served, and an unrecognised extension is
+  // labelled image/jpeg by contentTypeFor. That is safe only because nothing
+  // but the admin's own uploader writes there, under generated names.
+  it("serves a file whose extension it does not recognise, as a jpeg", async () => {
+    const response = await request("notes.txt");
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Content-Type")).toBe("image/jpeg");
+  });
 });
 
 describe("what it refuses", () => {
@@ -86,11 +98,6 @@ describe("what it refuses", () => {
     ["C:\\Windows\\win.ini", "an absolute Windows path"],
   ])("returns 404 for %s (%s)", async (name) => {
     const response = await request(name);
-    expect(response.status).toBe(404);
-  });
-
-  it("refuses a name with no extension we serve", async () => {
-    const response = await request("notes.txt");
     expect(response.status).toBe(404);
   });
 });

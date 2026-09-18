@@ -1,0 +1,147 @@
+# The whole stack: one database, both apps, one shared folder for photos.
+#
+# The two repos are deployed separately and know nothing about each other —
+# the only thing linking them is that they point at the same database and the
+# same uploads folder. That shared wiring is what this file exists to set up,
+# which is also why it sits here rather than inside either repo.
+#
+#   cp .env.docker.example .env      # then fill it in
+#   docker compose --profile setup run --rm migrate
+#   docker compose up -d
+#
+# Customer menu   http://localhost:3000
+# Admin dashboard http://localhost:3001
+
+name: bakery
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: bakery
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: bakery
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    # Published so Prisma Studio and psql can reach it from the host. Drop this
+    # line if you would rather the database stayed inside the compose network.
+    ports:
+      - "5432:5432"
+    healthcheck:
+      # The apps start the moment this passes, so it has to mean "ready for
+      # queries", not merely "the process is up".
+      test: ["CMD-SHELL", "pg_isready -U bakery -d bakery"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  # One-shot: creates the tables from prisma/schema.prisma. Run it once before
+  # the first `up`, and again after any schema change. Built from the `builder`
+  # stage because that is the only one carrying the Prisma CLI and the schema —
+  # the runtime images are deliberately too slim to do this.
+  migrate:
+    profiles: ["setup"]
+    build:
+      context: ./bakery-admin
+      target: builder
+      secrets:
+        - extra_ca_certs
+    environment:
+      DATABASE_URL: &db-url postgresql://bakery:${POSTGRES_PASSWORD}@db:5432/bakery
+      DIRECT_URL: *db-url
+    command: npx prisma db push --skip-generate
+    depends_on:
+      db:
+        condition: service_healthy
+
+  admin:
+    build:
+      context: ./bakery-admin
+      secrets:
+        - extra_ca_certs
+      args:
+        NEXT_PUBLIC_SHOP_NAME: ${NEXT_PUBLIC_SHOP_NAME:-Our Bakery}
+    restart: unless-stopped
+    environment:
+      # No pooler in front of a local Postgres, so both point at the same place.
+      # In production DATABASE_URL is Supabase's pooler on 6543 and DIRECT_URL
+      # is the direct line on 5432.
+      DATABASE_URL: *db-url
+      DIRECT_URL: *db-url
+      SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET in .env}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?set ADMIN_EMAIL in .env}
+      # Plain password for local use. In production set ADMIN_PASSWORD_HASH
+      # instead and leave this empty.
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH:-}
+      # Where the Preview tab sends the owner — a browser address, so it is
+      # localhost rather than the compose service name.
+      CUSTOMER_APP_URL: http://localhost:3000
+      # Leave empty and photos are written to the shared volume below instead.
+      CLOUDINARY_URL: ${CLOUDINARY_URL:-}
+    volumes:
+      - uploads:/data
+    ports:
+      - "3001:3001"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3001/login"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  customer:
+    build:
+      context: ./bakery-customer
+      secrets:
+        - extra_ca_certs
+      # Every NEXT_PUBLIC_* value is inlined while the pages compile, so these
+      # are build arguments rather than environment variables. Change one and
+      # the image has to be rebuilt: `docker compose up -d --build customer`.
+      args:
+        NEXT_PUBLIC_SHOP_NAME: ${NEXT_PUBLIC_SHOP_NAME:-Our Bakery}
+        NEXT_PUBLIC_SHOP_TAGLINE: ${NEXT_PUBLIC_SHOP_TAGLINE:-}
+        NEXT_PUBLIC_SHOP_ADDRESS: ${NEXT_PUBLIC_SHOP_ADDRESS:-}
+        NEXT_PUBLIC_SHOP_MAP_URL: ${NEXT_PUBLIC_SHOP_MAP_URL:-}
+        NEXT_PUBLIC_SHOP_PHONE: ${NEXT_PUBLIC_SHOP_PHONE:-}
+        NEXT_PUBLIC_SHOP_WHATSAPP: ${NEXT_PUBLIC_SHOP_WHATSAPP:-}
+        NEXT_PUBLIC_CREDIT_NAME: ${NEXT_PUBLIC_CREDIT_NAME:-}
+        NEXT_PUBLIC_CREDIT_WHATSAPP: ${NEXT_PUBLIC_CREDIT_WHATSAPP:-}
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: *db-url
+      DIRECT_URL: *db-url
+    volumes:
+      # The same volume the admin writes to. Without this the menu shows broken
+      # images for every photo uploaded to local disk rather than to Cloudinary.
+      - uploads:/data
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      # This endpoint runs a real query, so it fails when the database is gone
+      # rather than only when the process has died.
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/v1/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+volumes:
+  db-data:
+  uploads:
+
+secrets:
+  # Only needed on a network that re-signs TLS with its own root certificate,
+  # where `prisma generate` cannot verify binaries.prisma.sh. Point
+  # EXTRA_CA_CERTS_FILE at that root in .env; everywhere else the placeholder
+  # below is used, contains no certificate, and the build ignores it.
+  extra_ca_certs:
+    file: ${EXTRA_CA_CERTS_FILE:-./docker/no-extra-ca.pem}
