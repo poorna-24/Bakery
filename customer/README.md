@@ -5,7 +5,7 @@ The public menu page. This is what opens when a customer scans the QR code on th
 Read-only, mobile-first, no login, no cart, no ordering. It renders whatever the owner has saved
 in the admin app — the two apps share one database.
 
-> Its sibling repo is **bakery-admin**, the owner's dashboard. Both must point at the same
+> Its sibling app is **admin/** in this repo, the owner's dashboard. Both must point at the same
 > `DATABASE_URL` and the same `BAKERY_DATA_DIR`, or the menu will look empty.
 
 ## Running it
@@ -32,8 +32,8 @@ ipconfig | findstr IPv4
 
 | Variable | What it does |
 |---|---|
-| `DATABASE_URL` | The shared database. Must match bakery-admin. |
-| `BAKERY_DATA_DIR` | Folder holding `bakery.db` and `uploads/`. Must match bakery-admin. |
+| `DATABASE_URL` | The shared database. Must match the admin app. |
+| `BAKERY_DATA_DIR` | Folder holding `bakery.db` and `uploads/`. Must match the admin app. |
 | `NEXT_PUBLIC_SHOP_NAME` | Shown in the header and the page title. |
 | `NEXT_PUBLIC_SHOP_TAGLINE` | The line under "Our Menu". |
 | `NEXT_PUBLIC_SHOP_ADDRESS` | Address text in the footer. |
@@ -61,7 +61,7 @@ an argument and it points at localhost, which only works on this machine.
 - `app/uploads/[name]/route.ts` serves item photos out of the shared data folder. They cannot live
   in `public/` because the admin app — a different repo — is what writes them.
 - `lib/db.ts`, `lib/types.ts` and `lib/storage.ts` are byte-identical to the copies in
-  bakery-admin. Change one, copy it across.
+  the admin app. Change one, copy it across.
 
 ## Moving to hosted Postgres
 

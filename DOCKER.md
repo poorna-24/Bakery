@@ -113,11 +113,11 @@ bakery/                     one repo, both apps
   docker/no-extra-ca.pem    placeholder for the optional corporate CA
   data/                     local uploads and the pre-Postgres backup (ignored)
   scripts/                  set-database-url.mjs and friends
-  bakery-admin/
+  admin/
     Dockerfile
     .dockerignore
     .env.local              local secrets (git-ignored)
-  bakery-customer/
+  customer/
     Dockerfile
     .dockerignore
     .env.local              local secrets (git-ignored)
@@ -130,8 +130,8 @@ repo you deploy **two Vercel projects**, each with its Root Directory set:
 
 | Project | Root Directory |
 |---|---|
-| customer menu | `bakery-customer` |
-| admin dashboard | `bakery-admin` |
+| customer menu | `customer` |
+| admin dashboard | `admin` |
 
 Vercel then rebuilds a project only when files under its own directory change.
 Environment variables stay per-project, exactly as they are now.

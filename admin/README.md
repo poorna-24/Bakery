@@ -5,7 +5,7 @@ The owner's dashboard. Everything on the customer menu is created, edited and de
 Password-protected, never linked from the public site, and marked `noindex`. Keep this repo
 **private** — it holds the shape of the login, and its `.env.local` holds the password.
 
-> Its sibling repo is **bakery-customer**, the public menu. Both must point at the same
+> Its sibling app is **customer/** in this repo, the public menu. Both must point at the same
 > `DATABASE_URL` and the same `BAKERY_DATA_DIR`.
 
 ## First run
@@ -26,8 +26,8 @@ Sign in with the `ADMIN_EMAIL` / `ADMIN_PASSWORD` from `.env.local` (out of the 
 
 | Variable | What it does |
 |---|---|
-| `DATABASE_URL` | The shared database. Must match bakery-customer. |
-| `BAKERY_DATA_DIR` | Folder holding `bakery.db` and `uploads/`. Must match bakery-customer. |
+| `DATABASE_URL` | The shared database. Must match the customer app. |
+| `BAKERY_DATA_DIR` | Folder holding `bakery.db` and `uploads/`. Must match the customer app. |
 | `ADMIN_EMAIL` | The only account that can sign in. |
 | `ADMIN_PASSWORD` | Plain text — development only. |
 | `ADMIN_PASSWORD_HASH` | A bcrypt hash. Set this instead of the above before going live. |
@@ -71,7 +71,7 @@ visible to anyone.
 - `app/actions.ts` holds every mutation as a server action.
 - `lib/saveImage.ts` writes uploads into the shared folder and cleans up orphans.
 - `lib/db.ts`, `lib/types.ts` and `lib/storage.ts` are byte-identical to the copies in
-  bakery-customer. Change one, copy it across.
+  the customer app. Change one, copy it across.
 
 ## Behind a corporate proxy
 
