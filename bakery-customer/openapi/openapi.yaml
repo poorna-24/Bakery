@@ -1,0 +1,500 @@
+openapi: 3.0.3
+
+info:
+  title: Bakery Menu API
+  version: 1.0.0
+  description: |
+    Read-only access to the bakery's public menu — the same data the menu page
+    itself renders.
+
+    **No authentication.** Every response here is already visible to anyone who
+    scans the QR code on a table, so there is nothing to protect. Writes are not
+    part of this API: categories, items, prices, photos and opening hours are
+    changed in the separate admin application, behind its login.
+
+    **Sold-out items are still returned.** An item the shop has run out of stays
+    on the menu with `isAvailable: false`, because customers should know it
+    exists. Pass `available=true` to leave them out.
+
+    **Hidden and empty categories are never returned.** A category the owner has
+    hidden, or one with no items in it, is absent from every endpoint.
+  contact:
+    name: Poorna Chander Terala
+  license:
+    name: Private
+    url: https://example.invalid/private
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local development
+  - url: https://{host}/api/v1
+    description: Deployed site
+    variables:
+      host:
+        default: menu.example.com
+        description: Wherever the customer app is hosted
+
+tags:
+  - name: Menu
+    description: The whole menu in one call
+  - name: Categories
+    description: Menu sections, in the order customers see them
+  - name: Items
+    description: Individual products
+  - name: Shop
+    description: Shop details, contact numbers and opening hours
+  - name: Service
+    description: Operational endpoints
+
+paths:
+  /menu:
+    get:
+      tags: [Menu]
+      operationId: getMenu
+      summary: The full menu
+      description: |
+        Shop details plus every visible, non-empty category with its items
+        nested inside. One call renders an entire menu page.
+      responses:
+        "200":
+          description: The complete menu
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MenuResponse"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /categories:
+    get:
+      tags: [Categories]
+      operationId: listCategories
+      summary: List categories
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: A page of categories
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Category"
+                  meta:
+                    $ref: "#/components/schemas/PageMeta"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /items:
+    get:
+      tags: [Items]
+      operationId: listItems
+      summary: List items
+      description: Items across the whole menu, with optional filters.
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - name: category
+          in: query
+          required: false
+          description: Restrict to one category, by its slug.
+          schema:
+            type: string
+            example: cakes
+        - name: available
+          in: query
+          required: false
+          description: |
+            `true` returns only items on sale today, `false` only the sold-out
+            ones. Omit it to get both.
+          schema:
+            type: string
+            enum: ["true", "false"]
+        - name: q
+          in: query
+          required: false
+          description: Case-insensitive match on the item's name or description.
+          schema:
+            type: string
+            example: chocolate
+      responses:
+        "200":
+          description: A page of items
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Item"
+                  meta:
+                    $ref: "#/components/schemas/PageMeta"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /items/{id}:
+    get:
+      tags: [Items]
+      operationId: getItemById
+      summary: Get one item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The item's id, as returned by `/items` or `/menu`.
+          schema:
+            type: string
+            example: cmttw79mx0004dkxs9k2lf8qz
+      responses:
+        "200":
+          description: The item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /shop:
+    get:
+      tags: [Shop]
+      operationId: getShop
+      summary: Shop details and open/closed status
+      description: |
+        `status` is worked out in the shop's own timezone (Asia/Kolkata), not
+        the caller's. It is `null` when the owner has not set any hours.
+      responses:
+        "200":
+          description: The shop
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Shop"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /health:
+    get:
+      tags: [Service]
+      operationId: getHealth
+      summary: Health check
+      description: Runs a real query against the database, so it fails if the data is unreachable.
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+        "503":
+          description: The database could not be reached
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+
+components:
+  parameters:
+    Page:
+      name: page
+      in: query
+      required: false
+      description: 1-based page number. Anything invalid falls back to 1.
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    Limit:
+      name: limit
+      in: query
+      required: false
+      description: Results per page. Capped at 100.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+  responses:
+    NotFound:
+      description: No such resource
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error:
+              code: ITEM_NOT_FOUND
+              message: No item exists with id "abc123".
+    InternalServerError:
+      description: Something went wrong on the server
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              description: A stable, machine-readable code.
+              example: ITEM_NOT_FOUND
+            message:
+              type: string
+              description: Human-readable detail. Do not match on this.
+              example: No item exists with id "abc123".
+
+    PageMeta:
+      type: object
+      required: [page, limit, total, totalPages]
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 20
+        total:
+          type: integer
+          description: Total matching records, not just this page.
+          example: 23
+        totalPages:
+          type: integer
+          example: 2
+
+    Variant:
+      type: object
+      description: A size a product is sold in, when it has more than one.
+      required: [id, label, price]
+      properties:
+        id:
+          type: string
+          example: cmttw79mx0007dkxs1a2b3c4d
+        label:
+          type: string
+          example: 500 g
+        price:
+          type: number
+          format: double
+          example: 350
+
+    Item:
+      type: object
+      required:
+        - id
+        - name
+        - description
+        - price
+        - unit
+        - imageUrl
+        - isVeg
+        - isEggless
+        - isBestseller
+        - isAvailable
+        - variants
+        - categoryId
+        - categorySlug
+      properties:
+        id:
+          type: string
+          example: cmttw79mx0004dkxs9k2lf8qz
+        name:
+          type: string
+          example: Choco Truffle Cake
+        description:
+          type: string
+          description: May be an empty string.
+          example: Rich Belgian chocolate sponge layered with truffle cream.
+        price:
+          type: number
+          format: double
+          description: |
+            Base price in INR. When `variants` is non-empty this is a fallback
+            and the variant prices are what the menu shows.
+          example: 650
+        unit:
+          type: string
+          description: What the base price buys.
+          example: per kg
+        imageUrl:
+          type: string
+          nullable: true
+          description: |
+            Absolute URL when photos are hosted externally, or a path relative
+            to this site when they are stored locally. Null when the item has
+            no photo.
+          example: /uploads/0b2d9256-d82e-42ec-8f0e-0abc869e5d58.jpg
+        isVeg:
+          type: boolean
+          description: Drives the green or red mark on the menu.
+          example: true
+        isEggless:
+          type: boolean
+          example: false
+        isBestseller:
+          type: boolean
+          example: true
+        isAvailable:
+          type: boolean
+          description: False means sold out today. The item still appears on the menu.
+          example: true
+        variants:
+          type: array
+          description: Empty when the item is sold in a single size.
+          items:
+            $ref: "#/components/schemas/Variant"
+        categoryId:
+          type: string
+          example: cmttw79mx0000dkxs4xfov7dm
+        categorySlug:
+          type: string
+          example: cakes
+
+    Category:
+      type: object
+      required: [id, name, slug, description, itemCount]
+      properties:
+        id:
+          type: string
+          example: cmttw79mx0000dkxs4xfov7dm
+        name:
+          type: string
+          example: Cakes
+        slug:
+          type: string
+          description: Stable identifier, also the anchor on the menu page.
+          example: cakes
+        description:
+          type: string
+          example: Celebrate life's sweet moments with our handcrafted cakes.
+        itemCount:
+          type: integer
+          example: 4
+
+    CategoryWithItems:
+      type: object
+      required: [id, name, slug, description, items]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Item"
+
+    ShopHours:
+      type: object
+      nullable: true
+      required: [open, close, closedDays]
+      properties:
+        open:
+          type: string
+          pattern: '^([01]\d|2[0-3]):[0-5]\d$'
+          example: "07:00"
+        close:
+          type: string
+          pattern: '^([01]\d|2[0-3]):[0-5]\d$'
+          description: Earlier than `open` means the shop trades past midnight.
+          example: "21:30"
+        closedDays:
+          type: array
+          description: Weekday numbers the shop stays shut. 0 is Sunday.
+          items:
+            type: integer
+            minimum: 0
+            maximum: 6
+          example: []
+
+    ShopStatus:
+      type: object
+      nullable: true
+      required: [isOpen, label, detail]
+      properties:
+        isOpen:
+          type: boolean
+          example: false
+        label:
+          type: string
+          example: Closed
+        detail:
+          type: string
+          description: The timings, or when it opens next.
+          example: 7:00 am – 9:30 pm
+
+    Shop:
+      type: object
+      required: [name, tagline, address, mapUrl, phone, whatsapp, hours, status]
+      properties:
+        name:
+          type: string
+          example: SHIVAM BAKERY
+        tagline:
+          type: string
+          example: Handcrafted delights, made fresh every morning.
+        address:
+          type: string
+          example: Cherial, Telangana
+        mapUrl:
+          type: string
+          description: Opens the shop in a map app. Empty when not configured.
+          example: https://maps.app.goo.gl/ZvQ7RebnL8WHDhFg6
+        phone:
+          type: string
+          example: "+91 76660 93143"
+        whatsapp:
+          type: string
+          example: "+917666093143"
+        hours:
+          $ref: "#/components/schemas/ShopHours"
+        status:
+          $ref: "#/components/schemas/ShopStatus"
+
+    MenuResponse:
+      type: object
+      required: [shop, categories]
+      properties:
+        shop:
+          $ref: "#/components/schemas/Shop"
+        categories:
+          type: array
+          items:
+            $ref: "#/components/schemas/CategoryWithItems"
+
+    Health:
+      type: object
+      required: [status, version, checkedAt]
+      properties:
+        status:
+          type: string
+          enum: [ok, error]
+          example: ok
+        version:
+          type: string
+          example: 1.0.0
+        checkedAt:
+          type: string
+          format: date-time
