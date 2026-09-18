@@ -24,7 +24,7 @@ export default function Shell({
       <header className="border-b border-[var(--line)] bg-[var(--surface)]">
         <div className="mx-auto flex max-w-5xl items-center gap-4 px-4 py-3">
           <Link href="/" className="font-extrabold uppercase tracking-tight text-[var(--accent)]">
-            {process.env.NEXT_PUBLIC_SHOP_NAME ?? "Bakery"} Admin
+            {process.env.SHOP_NAME ?? "Bakery"} Admin
           </Link>
           <nav className="ml-auto flex items-center gap-1 text-sm">
             <Link href="/" className="rounded-lg px-3 py-1.5 hover:bg-[var(--bg)]">

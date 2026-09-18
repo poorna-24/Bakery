@@ -65,15 +65,15 @@ export default async function MenuPage() {
   return (
     <Menu
       categories={categories}
-      shopName={process.env.NEXT_PUBLIC_SHOP_NAME ?? "Our Bakery"}
-      tagline={process.env.NEXT_PUBLIC_SHOP_TAGLINE ?? "Freshly baked every morning."}
-      address={process.env.NEXT_PUBLIC_SHOP_ADDRESS ?? ""}
-      mapUrl={process.env.NEXT_PUBLIC_SHOP_MAP_URL ?? ""}
-      phone={process.env.NEXT_PUBLIC_SHOP_PHONE ?? ""}
-      whatsapp={process.env.NEXT_PUBLIC_SHOP_WHATSAPP ?? ""}
+      shopName={process.env.SHOP_NAME ?? "Our Bakery"}
+      tagline={process.env.SHOP_TAGLINE ?? "Freshly baked every morning."}
+      address={process.env.SHOP_ADDRESS ?? ""}
+      mapUrl={process.env.SHOP_MAP_URL ?? ""}
+      phone={process.env.SHOP_PHONE ?? ""}
+      whatsapp={process.env.SHOP_WHATSAPP ?? ""}
       credit={{
-        name: process.env.NEXT_PUBLIC_CREDIT_NAME ?? "",
-        whatsapp: process.env.NEXT_PUBLIC_CREDIT_WHATSAPP ?? "",
+        name: process.env.CREDIT_NAME ?? "",
+        whatsapp: process.env.CREDIT_WHATSAPP ?? "",
       }}
       appearance={appearance}
       hours={hours}

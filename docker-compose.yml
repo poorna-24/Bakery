@@ -5,7 +5,7 @@
 # same uploads folder. That shared wiring is what this file exists to set up,
 # which is also why it sits here rather than inside either repo.
 #
-#   cp .env.docker.example .env      # then fill it in
+#   cp .env.example .env      # then fill it in
 #   docker compose --profile setup run --rm migrate
 #   docker compose up -d
 #
@@ -61,8 +61,6 @@ services:
       context: ./admin
       secrets:
         - extra_ca_certs
-      args:
-        NEXT_PUBLIC_SHOP_NAME: ${NEXT_PUBLIC_SHOP_NAME:-Our Bakery}
     restart: unless-stopped
     environment:
       # No pooler in front of a local Postgres, so both point at the same place.
@@ -70,6 +68,7 @@ services:
       # is the direct line on 5432.
       DATABASE_URL: *db-url
       DIRECT_URL: *db-url
+      SHOP_NAME: ${SHOP_NAME:-Our Bakery}
       SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET in .env}
       ADMIN_EMAIL: ${ADMIN_EMAIL:?set ADMIN_EMAIL in .env}
       # Plain password for local use. In production set ADMIN_PASSWORD_HASH
@@ -100,22 +99,21 @@ services:
       context: ./customer
       secrets:
         - extra_ca_certs
-      # Every NEXT_PUBLIC_* value is inlined while the pages compile, so these
-      # are build arguments rather than environment variables. Change one and
-      # the image has to be rebuilt: `docker compose up -d --build customer`.
-      args:
-        NEXT_PUBLIC_SHOP_NAME: ${NEXT_PUBLIC_SHOP_NAME:-Our Bakery}
-        NEXT_PUBLIC_SHOP_TAGLINE: ${NEXT_PUBLIC_SHOP_TAGLINE:-}
-        NEXT_PUBLIC_SHOP_ADDRESS: ${NEXT_PUBLIC_SHOP_ADDRESS:-}
-        NEXT_PUBLIC_SHOP_MAP_URL: ${NEXT_PUBLIC_SHOP_MAP_URL:-}
-        NEXT_PUBLIC_SHOP_PHONE: ${NEXT_PUBLIC_SHOP_PHONE:-}
-        NEXT_PUBLIC_SHOP_WHATSAPP: ${NEXT_PUBLIC_SHOP_WHATSAPP:-}
-        NEXT_PUBLIC_CREDIT_NAME: ${NEXT_PUBLIC_CREDIT_NAME:-}
-        NEXT_PUBLIC_CREDIT_WHATSAPP: ${NEXT_PUBLIC_CREDIT_WHATSAPP:-}
     restart: unless-stopped
     environment:
       DATABASE_URL: *db-url
       DIRECT_URL: *db-url
+      # The shop's details are read on the server and passed down as props, so
+      # they are ordinary runtime values: correct a phone number here and a
+      # restart is enough — no rebuild, because nothing is baked into the image.
+      SHOP_NAME: ${SHOP_NAME:-Our Bakery}
+      SHOP_TAGLINE: ${SHOP_TAGLINE:-}
+      SHOP_ADDRESS: ${SHOP_ADDRESS:-}
+      SHOP_MAP_URL: ${SHOP_MAP_URL:-}
+      SHOP_PHONE: ${SHOP_PHONE:-}
+      SHOP_WHATSAPP: ${SHOP_WHATSAPP:-}
+      CREDIT_NAME: ${CREDIT_NAME:-}
+      CREDIT_WHATSAPP: ${CREDIT_WHATSAPP:-}
     volumes:
       # The same volume the admin writes to. Without this the menu shows broken
       # images for every photo uploaded to local disk rather than to Cloudinary.

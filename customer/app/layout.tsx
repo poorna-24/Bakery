@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
-const shopName = process.env.NEXT_PUBLIC_SHOP_NAME ?? "Our Bakery";
-const tagline = process.env.NEXT_PUBLIC_SHOP_TAGLINE ?? "Freshly baked every morning.";
+const shopName = process.env.SHOP_NAME ?? "Our Bakery";
+const tagline = process.env.SHOP_TAGLINE ?? "Freshly baked every morning.";
 
 export const metadata: Metadata = {
   title: `Menu — ${shopName}`,

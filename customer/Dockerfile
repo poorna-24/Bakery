@@ -22,6 +22,9 @@ FROM base AS deps
 # `prisma generate`, which reads it. Without it the install fails outright.
 COPY package.json package-lock.json ./
 COPY prisma ./prisma
+# postinstall runs prisma through scripts/load-root-env.mjs, so the script has
+# to be here before npm ci — otherwise the install dies looking for it.
+COPY scripts ./scripts
 
 # `prisma generate` downloads its query engine over HTTPS, which fails behind a
 # network that re-signs TLS with its own root — the container trusts the public
@@ -62,25 +65,10 @@ ARG DIRECT_URL="postgresql://build:build@127.0.0.1:5432/build"
 ENV DATABASE_URL=$DATABASE_URL
 ENV DIRECT_URL=$DIRECT_URL
 
-# NEXT_PUBLIC_* values are inlined into the bundle as the pages compile, so they
-# have to be supplied now. Setting them at run time is too late — the shop name
-# and phone number would already be baked in as the defaults below.
-ARG NEXT_PUBLIC_SHOP_NAME="Our Bakery"
-ARG NEXT_PUBLIC_SHOP_TAGLINE="Handcrafted delights, made fresh every morning."
-ARG NEXT_PUBLIC_SHOP_ADDRESS=""
-ARG NEXT_PUBLIC_SHOP_MAP_URL=""
-ARG NEXT_PUBLIC_SHOP_PHONE=""
-ARG NEXT_PUBLIC_SHOP_WHATSAPP=""
-ARG NEXT_PUBLIC_CREDIT_NAME=""
-ARG NEXT_PUBLIC_CREDIT_WHATSAPP=""
-ENV NEXT_PUBLIC_SHOP_NAME=$NEXT_PUBLIC_SHOP_NAME \
-    NEXT_PUBLIC_SHOP_TAGLINE=$NEXT_PUBLIC_SHOP_TAGLINE \
-    NEXT_PUBLIC_SHOP_ADDRESS=$NEXT_PUBLIC_SHOP_ADDRESS \
-    NEXT_PUBLIC_SHOP_MAP_URL=$NEXT_PUBLIC_SHOP_MAP_URL \
-    NEXT_PUBLIC_SHOP_PHONE=$NEXT_PUBLIC_SHOP_PHONE \
-    NEXT_PUBLIC_SHOP_WHATSAPP=$NEXT_PUBLIC_SHOP_WHATSAPP \
-    NEXT_PUBLIC_CREDIT_NAME=$NEXT_PUBLIC_CREDIT_NAME \
-    NEXT_PUBLIC_CREDIT_WHATSAPP=$NEXT_PUBLIC_CREDIT_WHATSAPP
+# The shop's details are deliberately not baked in here. They are read on the
+# server at request time, so the compose file passes them as ordinary runtime
+# environment variables — correcting a phone number needs a restart, not a
+# rebuild of this image.
 
 # public/ is empty in this project, and git does not track empty directories —
 # so on a fresh clone it is absent and the runner's COPY would fail.

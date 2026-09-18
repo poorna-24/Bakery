@@ -347,8 +347,8 @@ Nothing has been pushed anywhere, and no remote is configured.
 ## 11. Still open — your call
 
 1. **Bakery name and brand colours.** Currently "KS Bakers" with a warm cream/brown palette, set by
-   `NEXT_PUBLIC_SHOP_NAME` in both `.env.local` files. A logo image would replace the wordmark.
-2. **Phone number.** Set `NEXT_PUBLIC_SHOP_PHONE` and a "Call the shop" button appears on every
+   `SHOP_NAME` in the root `.env`. A logo image would replace the wordmark.
+2. **Phone number.** Set `SHOP_PHONE` and a "Call the shop" button appears on every
    item. Left empty for now, so it is hidden.
 3. **Tax line.** Prices show as inclusive with a footer note. Change it if that is wrong.
 4. **Multiple outlets.** Your reference site has a location picker. Not built — it would mean a

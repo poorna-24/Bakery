@@ -28,7 +28,7 @@ export default async function LoginPage({
     <main className="grid min-h-dvh place-items-center px-4">
       <form action={signIn} className="card w-full max-w-sm p-6 shadow-sm">
         <h1 className="text-lg font-bold">
-          {process.env.NEXT_PUBLIC_SHOP_NAME ?? "Bakery"} Admin
+          {process.env.SHOP_NAME ?? "Bakery"} Admin
         </h1>
         <p className="mt-1 text-sm text-[var(--muted)]">Sign in to manage the menu.</p>
 
