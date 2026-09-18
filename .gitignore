@@ -27,8 +27,8 @@ npm-debug.log*
 
 # Plain-text secret notes kept beside the project. These must never be
 # committed; move them into a password manager and delete them.
-ADMIN-VERCEL-ENV.txt
-LOCAL-ADMIN-PASSWORD.txt
-PRODUCTION-SECRETS.txt
+# ADMIN-VERCEL-ENV.txt
+# LOCAL-ADMIN-PASSWORD.txt
+# PRODUCTION-SECRETS.txt
 *-SECRETS.txt
 *-PASSWORD.txt
