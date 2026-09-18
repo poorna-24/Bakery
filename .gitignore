@@ -7,8 +7,8 @@ out/
 build/
 
 # Secrets — every shape, at every level. Never relax these.
-# .env
-# .env.*
+.env
+.env.*
 !.env.example
 !.env.docker.example
 
