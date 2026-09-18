@@ -25,7 +25,7 @@ Reference for look & content structure: ksbakers.com/products (category chips + 
 | Device | **Mobile phone** (built at 360–430px) | Laptop mostly, works on phone |
 | Login | None. Public. | Email + password |
 | Can do | Browse, search, read | Create / edit / delete categories, items, prices, images, availability |
-| Folder | `bakery-customer/` | `bakery-admin/` |
+| Folder | `customer/` | `admin/` |
 | Dev URL | http://localhost:3000 | http://localhost:3001 |
 
 **How they are interconnected:** two separate Next.js apps, two separate repos, but both read and
@@ -65,7 +65,7 @@ the one thing they share.
 | Database | **SQLite via Prisma 6** | Chosen so it runs today with zero accounts, no server, no keys. |
 | Photos | Files in `data/uploads/`, served by a route | Written by admin, read by both. |
 | Admin login | Signed JWT cookie (`jose`) + bcrypt | One owner account from `.env.local`. No sign-up, no user table. |
-| QR code | `npm run qr` in bakery-customer | Outputs an SVG plus a printable A6 table card. |
+| QR code | `npm run qr` in customer/ | Outputs an SVG plus a printable A6 table card. |
 
 Node on this machine is v18.20.8, which Next 15 supports.
 
@@ -204,7 +204,7 @@ Bakery/
 │   ├── bakery.db
 │   └── uploads/
 │
-├── bakery-customer/            repo 1 — public menu
+├── customer/            repo 1 — public menu
 │   ├── app/
 │   │   ├── page.tsx            reads the menu, drops empty categories
 │   │   ├── layout.tsx
@@ -218,7 +218,7 @@ Bakery/
 │   ├── scripts/qr.mjs          QR + printable table card
 │   └── prisma/schema.prisma
 │
-└── bakery-admin/               repo 2 — owner dashboard (keep private)
+└── admin/               repo 2 — owner dashboard (keep private)
     ├── middleware.ts           guards every route
     ├── app/
     │   ├── actions.ts          every create / update / delete
@@ -268,16 +268,16 @@ position looks off.
 Two terminals.
 
 ```bash
-cd bakery-customer
+cd customer
 npm run dev          # http://localhost:3000  — the menu
 ```
 
 ```bash
-cd bakery-admin
+cd admin
 npm run dev          # http://localhost:3001  — the dashboard
 ```
 
-Sign in with `owner@bakery.com` / `bakery123` (both in `bakery-admin/.env.local` — change them).
+Sign in with `owner@bakery.com` / `bakery123` (both in `admin/.env.local` — change them).
 
 **On your real phone**, same Wi-Fi as this laptop:
 
@@ -290,7 +290,7 @@ then open `http://<that-ip>:3000` on the phone.
 **The QR code:**
 
 ```bash
-cd bakery-customer
+cd customer
 npm run qr -- https://menu.yourbakery.com
 ```
 
@@ -322,26 +322,25 @@ NODE_EXTRA_CA_CERTS="C:\Users\poterala\.node-ca\windows-root-ca.pem" npx prisma 
 
 ## 10. GitHub
 
-You said you'll handle the pushes. Both folders are initialised as git repos with an initial
-commit, and `.gitignore` keeps `node_modules`, `.next`, `.env*` and `data/` out.
+You said you'll handle the pushes. Both apps now live in one repository, with the full
+history of each preserved, and `.gitignore` keeps `node_modules`, `.next`, `.env*` and
+`data/` out at every level.
 
-Create two empty repos on github.com, then:
+Create one empty repo on github.com, then:
 
 ```bash
-cd bakery-customer
-git remote add origin https://github.com/<you>/bakery-customer.git
+git remote add origin https://github.com/<you>/bakery.git
 git push -u origin main
 ```
 
-```bash
-cd bakery-admin
-git remote add origin https://github.com/<you>/bakery-admin.git
-git push -u origin main
-```
+Keep it **private**. The menu is public in the sense that anyone may read it, but the
+admin's source sits beside it in the same repository.
 
-Suggested: **bakery-customer public** (it is a public menu anyway), **bakery-admin private**.
+Deployment stays two Vercel projects reading that one repo, each with its Root Directory
+set — `customer` for the menu, `admin` for the dashboard. Getting those the wrong way
+round serves the login screen at the public menu address.
 
-Nothing has been pushed anywhere, and no remotes are configured.
+Nothing has been pushed anywhere, and no remote is configured.
 
 ---
 

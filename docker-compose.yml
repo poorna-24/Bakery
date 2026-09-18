@@ -44,7 +44,7 @@ services:
   migrate:
     profiles: ["setup"]
     build:
-      context: ./bakery-admin
+      context: ./admin
       target: builder
       secrets:
         - extra_ca_certs
@@ -58,7 +58,7 @@ services:
 
   admin:
     build:
-      context: ./bakery-admin
+      context: ./admin
       secrets:
         - extra_ca_certs
       args:
@@ -97,7 +97,7 @@ services:
 
   customer:
     build:
-      context: ./bakery-customer
+      context: ./customer
       secrets:
         - extra_ca_certs
       # Every NEXT_PUBLIC_* value is inlined while the pages compile, so these

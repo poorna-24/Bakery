@@ -19,11 +19,11 @@ const ROOT = path.resolve(import.meta.dirname, "..");
 
 /** Which keys belong in which file. */
 const TARGETS = [
-  { file: "bakery-admin/.env.local", keys: ["DATABASE_URL", "DIRECT_URL"] },
-  { file: "bakery-admin/.env", keys: ["DATABASE_URL", "DIRECT_URL"] },
+  { file: "admin/.env.local", keys: ["DATABASE_URL", "DIRECT_URL"] },
+  { file: "admin/.env", keys: ["DATABASE_URL", "DIRECT_URL"] },
   // The customer app only reads; it never changes the schema, so no DIRECT_URL.
-  { file: "bakery-customer/.env.local", keys: ["DATABASE_URL"] },
-  { file: "bakery-customer/.env", keys: ["DATABASE_URL"] },
+  { file: "customer/.env.local", keys: ["DATABASE_URL"] },
+  { file: "customer/.env", keys: ["DATABASE_URL"] },
 ];
 
 function complain(url, label, expectedPort) {
