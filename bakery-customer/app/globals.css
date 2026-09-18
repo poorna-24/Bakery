@@ -1,0 +1,166 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #fdf6ec;
+  --surface: #ffffff;
+  --text: #3a2418;
+  --muted: #8a7663;
+  --line: #eaddc9;
+  --accent: #b4741f;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #17110c;
+    --surface: #221912;
+    --text: #f6ece0;
+    --muted: #a99683;
+    --line: #35271c;
+    --accent: #e0a45c;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+  /* the sticky header + chip rail must not cover a section we jump to */
+  scroll-padding-top: 116px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  overscroll-behavior-y: none;
+}
+
+/* Horizontal category rail: scrolls with the thumb, no visible scrollbar. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Placeholder shimmer shown while an item photo loads. */
+.shimmer {
+  background-image: linear-gradient(
+    100deg,
+    var(--line) 20%,
+    color-mix(in srgb, var(--line) 55%, white) 40%,
+    var(--line) 60%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .shimmer {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Built-in backgrounds. Catalogued in lib/backgrounds.ts — the ids there must
+   match these class names. Drawn with gradients so there is nothing to
+   download and nothing to go blurry on a high-density phone screen.
+   --------------------------------------------------------------------------- */
+
+:root {
+  --pattern-ink: rgba(58, 36, 24, 0.09);
+  --pattern-ink-soft: rgba(58, 36, 24, 0.05);
+  --pattern-glow: rgba(224, 164, 92, 0.28);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pattern-ink: rgba(246, 236, 224, 0.07);
+    --pattern-ink-soft: rgba(246, 236, 224, 0.04);
+    --pattern-glow: rgba(224, 164, 92, 0.16);
+  }
+}
+
+.pattern-dots {
+  background-image: radial-gradient(var(--pattern-ink) 1.4px, transparent 1.5px);
+  background-size: 18px 18px;
+}
+
+/* Rows of arcs, like icing piped along the edge of a cake. */
+.pattern-scallops {
+  background-image: radial-gradient(
+    circle at 11px 22px,
+    transparent 9.4px,
+    var(--pattern-ink) 9.5px 10.5px,
+    transparent 10.6px
+  );
+  background-size: 22px 22px;
+}
+
+.pattern-linen {
+  background-image:
+    repeating-linear-gradient(45deg, var(--pattern-ink-soft) 0 1px, transparent 1px 7px),
+    repeating-linear-gradient(-45deg, var(--pattern-ink-soft) 0 1px, transparent 1px 7px);
+}
+
+.pattern-sunburst {
+  background-image: radial-gradient(120% 55% at 50% -8%, var(--pattern-glow), transparent 68%);
+  background-repeat: no-repeat;
+}
+
+/* ---------------------------------------------------------------------------
+   Translucent surfaces.
+
+   These carry their own alpha rather than using Tailwind's opacity modifier.
+   `bg-[var(--bg)]/92` looks reasonable but produces NO background at all:
+   Tailwind cannot inject an alpha channel into a variable holding a hex
+   colour, so it drops the declaration. The sticky header was see-through for
+   exactly that reason, which only showed once a photo sat behind it.
+   --------------------------------------------------------------------------- */
+
+.bar-surface {
+  background-color: rgb(253 246 236 / 0.93);
+}
+
+/* Dims an uploaded background photo so the menu stays readable over it. */
+.scrim {
+  background-color: rgb(253 246 236 / 0.9);
+}
+
+@media (prefers-color-scheme: dark) {
+  .bar-surface {
+    background-color: rgb(23 17 12 / 0.93);
+  }
+  .scrim {
+    background-color: rgb(23 17 12 / 0.92);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Offer / festival strip colours. Ids live in lib/offer.ts — the class names
+   there must match these. Each pairs a solid background with text that stays
+   readable on it in both light and dark mode, so the strip reads the same way
+   whatever the viewer's phone is set to.
+   --------------------------------------------------------------------------- */
+
+.offer-festive { background-color: #B3261E; color: #FFF6F5; }
+.offer-gold    { background-color: #B4741F; color: #FFF9EF; }
+.offer-fresh   { background-color: #1B6E45; color: #F2FBF6; }
+.offer-berry   { background-color: #7A2E6B; color: #FDF4FB; }
+
+@media (prefers-color-scheme: dark) {
+  .offer-festive { background-color: #8E1C16; }
+  .offer-gold    { background-color: #8A5816; }
+  .offer-fresh   { background-color: #145434; }
+  .offer-berry   { background-color: #5E2352; }
+}
