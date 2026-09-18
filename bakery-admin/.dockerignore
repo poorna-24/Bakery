@@ -1,0 +1,34 @@
+# Keep the build context small and keep secrets out of it. Everything listed
+# here is either rebuilt inside the image, irrelevant to it, or must never be
+# copied into a layer.
+
+node_modules
+.next
+out
+coverage
+
+# Secrets. A .env file copied into a layer stays in the image history even if a
+# later step deletes it, so none of them may enter the context at all.
+.env
+.env.*
+!.env.example
+
+.git
+.gitignore
+.github
+
+# Tests and tooling do not ship. They are run in CI, not in the container.
+**/*.test.ts
+**/*.test.tsx
+vitest.config.ts
+vitest.setup.ts
+
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+README.md
+*.md
+.vscode
+.idea
+npm-debug.log*
