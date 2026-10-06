@@ -239,6 +239,38 @@ describe("choosing a photo", () => {
     expect(theForm().querySelector("img")).toHaveAttribute("src", "blob:chosen-file");
   });
 
+  // The server takes a file over a link, so a chosen file left behind would
+  // win the save while the preview showed the link.
+  it("drops a chosen file when a link is pasted instead", async () => {
+    const user = userEvent.setup();
+    renderForm();
+
+    await user.upload(fieldNamed("image"), new File(["x"], "cake.jpg", { type: "image/jpeg" }));
+    await user.click(screen.getByRole("button", { name: "Paste a link" }));
+    await user.type(fieldNamed("imageLink"), "https://example.com/tart.jpg");
+
+    expect((fieldNamed("image") as HTMLInputElement).files).toHaveLength(0);
+    expect(theForm().querySelector("img")).toHaveAttribute("src", "https://example.com/tart.jpg");
+  });
+
+  it("names the chosen file so the owner knows it was picked", async () => {
+    const user = userEvent.setup();
+    renderForm();
+
+    await user.upload(fieldNamed("image"), new File(["x"], "cake.jpg", { type: "image/jpeg" }));
+
+    expect(screen.getByText("cake.jpg")).toBeInTheDocument();
+  });
+
+  it("says whether the preview is the saved photo or a new one", async () => {
+    const user = userEvent.setup();
+    renderForm(existing);
+    expect(screen.getByText("Current photo")).toBeInTheDocument();
+
+    await user.upload(fieldNamed("image"), new File(["x"], "cake.jpg", { type: "image/jpeg" }));
+    expect(screen.getByText(/new photo · not saved yet/i)).toBeInTheDocument();
+  });
+
   // Cancelling the dialog fires a change with nothing selected. userEvent
   // short-circuits an empty upload without firing anything, so this has to
   // dispatch the event the browser would actually send.

@@ -185,6 +185,32 @@ describe("saveImageFromUrl", () => {
     expect(new Uint8Array(onDisk)).toEqual(bytes);
   });
 
+  // What "Copy image address" gives on a Google Images results thumbnail.
+  it("saves a pasted data: image without fetching anything", async () => {
+    let called = false;
+    globalThis.fetch = (async () => {
+      called = true;
+      return new Response();
+    }) as typeof fetch;
+    const bytes = new Uint8Array([0x52, 0x49, 0x46, 0x46, 0x01]);
+
+    const result = await saveImageFromUrl(
+      `data:image/webp;base64,${Buffer.from(bytes).toString("base64")}`,
+    );
+    if (!result || "error" in result) throw new Error("expected a saved file");
+
+    expect(result.url).toMatch(/^\/uploads\/[0-9a-f-]{36}\.webp$/);
+    const onDisk = await readFile(path.join(uploadsDir(), path.basename(result.url)));
+    expect(new Uint8Array(onDisk)).toEqual(bytes);
+    expect(called).toBe(false);
+  });
+
+  it("applies the upload rules to a pasted data: image", async () => {
+    expect(await saveImageFromUrl("data:image/svg+xml;base64,PHN2Zz4=")).toEqual({
+      error: expect.stringMatching(/JPG, PNG, WebP or AVIF/),
+    });
+  });
+
   // The commonest wrong link returns a web page, not a picture.
   it("refuses a link that returns a page instead of an image", async () => {
     respondWith(new Uint8Array([1]), { "content-type": "text/html; charset=utf-8" });

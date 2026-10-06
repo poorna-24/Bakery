@@ -85,10 +85,17 @@ services:
       SHOP_WHATSAPP: ${SHOP_WHATSAPP:-}
       CREDIT_NAME: ${CREDIT_NAME:-}
       CREDIT_WHATSAPP: ${CREDIT_WHATSAPP:-}
+
+      # The same corporate root the build trusts, trusted at runtime too. Without
+      # it, behind a TLS-inspecting network every outbound HTTPS call fails —
+      # Cloudinary uploads and pasted image links alike. With the placeholder
+      # Node logs a warning and carries on with the public roots.
+      NODE_EXTRA_CA_CERTS: /etc/ssl/extra-ca.pem
     volumes:
       # Uploaded photos, kept outside the container so a rebuild does not lose
       # them. With CLOUDINARY_URL set this goes unused.
       - uploads:/data
+      - ${EXTRA_CA_CERTS_FILE:-./docker/no-extra-ca.pem}:/etc/ssl/extra-ca.pem:ro
     ports:
       - "3000:3000"
     depends_on:
