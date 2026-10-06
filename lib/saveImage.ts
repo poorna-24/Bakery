@@ -133,6 +133,18 @@ async function resolveToPicture(rawUrl: string): Promise<UrlCheck> {
   return checkImageUrl((inner ?? landedOn).toString());
 }
 
+const DATA_URL = /^data:(image\/[a-z0-9.+-]+);base64,([a-z0-9+/=\s]+)$/i;
+
+/** A pasted `data:image/...;base64,...` as a File, or null for anything else. */
+function fileFromDataUrl(raw: string): File | null {
+  const match = DATA_URL.exec(raw.trim());
+  if (!match) return null;
+
+  const bytes = Buffer.from(match[2], "base64");
+  // saveImage checks the type and size, exactly as it does for a real upload.
+  return new File([bytes], "pasted-image", { type: match[1].toLowerCase() });
+}
+
 /**
  * Saves an image the owner pasted a link to.
  *
@@ -143,6 +155,12 @@ async function resolveToPicture(rawUrl: string): Promise<UrlCheck> {
  * stranger's server. Copying it once makes the menu self-contained.
  */
 export async function saveImageFromUrl(rawUrl: string): Promise<SaveResult | null> {
+  // Google's "Copy image address" on a search-results thumbnail gives the
+  // picture itself, inlined as a data: URL, rather than a link to it. Nothing
+  // to fetch — decode it and treat it as an uploaded file.
+  const inline = fileFromDataUrl(rawUrl);
+  if (inline) return saveImage(inline);
+
   const resolved = await resolveToPicture(rawUrl);
   if (!resolved.ok) return { error: resolved.error };
 
