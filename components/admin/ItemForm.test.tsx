@@ -253,6 +253,81 @@ describe("choosing a photo", () => {
     expect(theForm().querySelector("img")).toHaveAttribute("src", "https://example.com/tart.jpg");
   });
 
+  describe("dragging a photo onto the box", () => {
+    const realDataTransfer = globalThis.DataTransfer;
+
+    // jsdom has no DataTransfer, and its input.files only takes a real
+    // FileList. Stand in for both and record what the drop hands the input.
+    function stubDrop() {
+      globalThis.DataTransfer = class {
+        added: File[] = [];
+        items = { add: (file: File) => this.added.push(file) };
+        get files() {
+          return this.added;
+        }
+      } as unknown as typeof DataTransfer;
+
+      const input = fieldNamed("image");
+      const handed: { files?: File[] } = {};
+      Object.defineProperty(input, "files", {
+        configurable: true,
+        set: (files: File[]) => (handed.files = files),
+        get: () => handed.files ?? [],
+      });
+      return { dropZone: input.closest("label")!, handed };
+    }
+
+    afterEach(() => {
+      globalThis.DataTransfer = realDataTransfer;
+    });
+
+    it("highlights while a photo is held over it, and stops when it leaves", () => {
+      renderForm();
+      const { dropZone } = stubDrop();
+
+      fireEvent.dragOver(dropZone);
+      expect(dropZone).toHaveClass("bg-amber-50");
+
+      fireEvent.dragLeave(dropZone);
+      expect(dropZone).not.toHaveClass("bg-amber-50");
+    });
+
+    it("puts a dropped photo into the form and previews it", () => {
+      renderForm();
+      const { dropZone, handed } = stubDrop();
+      const file = new File(["x"], "dropped.jpg", { type: "image/jpeg" });
+
+      fireEvent.dragOver(dropZone);
+      fireEvent.drop(dropZone, { dataTransfer: { files: [file] } });
+
+      expect(handed.files, "the input is what the form submits").toEqual([file]);
+      expect(screen.getByText("dropped.jpg")).toBeInTheDocument();
+      expect(theForm().querySelector("img")).toHaveAttribute("src", "blob:chosen-file");
+      expect(dropZone).not.toHaveClass("bg-amber-50");
+    });
+
+    it("ignores a dropped file that is not a picture", () => {
+      renderForm(existing);
+      const { dropZone, handed } = stubDrop();
+
+      fireEvent.drop(dropZone, {
+        dataTransfer: { files: [new File(["x"], "menu.pdf", { type: "application/pdf" })] },
+      });
+
+      expect(handed.files).toBeUndefined();
+      expect(theForm().querySelector("img")).toHaveAttribute("src", existing.imageUrl);
+    });
+
+    it("ignores a drop with nothing in it", () => {
+      renderForm(existing);
+      const { dropZone, handed } = stubDrop();
+
+      fireEvent.drop(dropZone, { dataTransfer: { files: [] } });
+
+      expect(handed.files).toBeUndefined();
+    });
+  });
+
   it("names the chosen file so the owner knows it was picked", async () => {
     const user = userEvent.setup();
     renderForm();
