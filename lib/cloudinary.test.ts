@@ -115,6 +115,33 @@ describe("uploadToCloudinary", () => {
     expect(uploadStreamCalls[0]).toMatchObject({ folder: CLOUDINARY_FOLDER });
   });
 
+  // QA sets its own folder so test photos stay out of the live menu's.
+  it("files under the environment's own folder when one is set", async () => {
+    const original = process.env.CLOUDINARY_FOLDER;
+    process.env.CLOUDINARY_FOLDER = " bakery-qa ";
+    try {
+      await uploadToCloudinary(Buffer.from([1]), "cake.jpg");
+      await uploadToCloudinaryFromUrl("https://example.com/cake.jpg");
+      expect(uploadStreamCalls[0]).toMatchObject({ folder: "bakery-qa" });
+      expect(uploadCalls[0][1]).toMatchObject({ folder: "bakery-qa" });
+    } finally {
+      if (original === undefined) delete process.env.CLOUDINARY_FOLDER;
+      else process.env.CLOUDINARY_FOLDER = original;
+    }
+  });
+
+  it("falls back to the production folder when the setting is blank", async () => {
+    const original = process.env.CLOUDINARY_FOLDER;
+    process.env.CLOUDINARY_FOLDER = "   ";
+    try {
+      await uploadToCloudinary(Buffer.from([1]), "cake.jpg");
+      expect(uploadStreamCalls[0]).toMatchObject({ folder: CLOUDINARY_FOLDER });
+    } finally {
+      if (original === undefined) delete process.env.CLOUDINARY_FOLDER;
+      else process.env.CLOUDINARY_FOLDER = original;
+    }
+  });
+
   // A filename arriving from a form is not an identifier: two items called
   // cake.jpg must not overwrite each other.
   it("never derives the stored name from the uploaded filename", async () => {

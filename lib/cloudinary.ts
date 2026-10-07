@@ -11,6 +11,14 @@ import { v2 as cloudinary } from "cloudinary";
 
 export const CLOUDINARY_FOLDER = "bakery";
 
+/**
+ * Where uploads go. Each environment sets its own (bakery-qa on QA), so test
+ * photos never land among the live menu's. Unset means production's folder.
+ */
+export function cloudinaryFolder(): string {
+  return process.env.CLOUDINARY_FOLDER?.trim() || CLOUDINARY_FOLDER;
+}
+
 /** True when credentials are configured, so uploads should go to the cloud. */
 export function usingCloudinary(): boolean {
   return Boolean(process.env.CLOUDINARY_URL);
@@ -41,7 +49,7 @@ export async function uploadToCloudinary(
     (resolve, reject) => {
       const stream = api.uploader.upload_stream(
         {
-          folder: CLOUDINARY_FOLDER,
+          folder: cloudinaryFolder(),
           resource_type: "image",
           // Never trust a filename from a form as an identifier.
           use_filename: false,
@@ -126,7 +134,7 @@ export async function uploadToCloudinaryFromUrl(remoteUrl: string): Promise<Clou
   const api = client();
 
   const result = await api.uploader.upload(remoteUrl, {
-    folder: CLOUDINARY_FOLDER,
+    folder: cloudinaryFolder(),
     resource_type: "image",
     use_filename: false,
     unique_filename: true,
