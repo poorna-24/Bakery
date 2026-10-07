@@ -83,7 +83,7 @@ export default function Footer({
       </div>
 
       <p className="mt-7 text-xs text-[var(--muted)]">
-        Prices are inclusive of taxes and may change without notice.
+        Prices are inclusive of taxes and may change without notice. @chanduterala
       </p>
 
       {credit.name && (
