@@ -1,14 +1,14 @@
 name: CI
 
-# Runs on every pull request and on main. Make "Lint, types and tests" and
-# "Production build" required checks in the branch protection rule and a pull
-# request cannot be merged until both are green.
+# Runs on every pull request, and on pushes to main (production) and qa. Make
+# "Lint, types and tests" and "Production build" required checks in the branch
+# protection rule and a pull request cannot be merged until both are green.
 #
 # The menu and the dashboard are one Next.js app now, so one job covers both.
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, qa]
 
 # A new push to the same branch makes the previous run pointless.
 concurrency:
