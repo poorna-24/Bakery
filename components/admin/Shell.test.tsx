@@ -37,6 +37,44 @@ afterEach(() => {
   else process.env.SHOP_NAME = originalShopName;
 });
 
+describe("the version label", () => {
+  const saved = {
+    sha: process.env.VERCEL_GIT_COMMIT_SHA,
+    label: process.env.ENVIRONMENT_LABEL,
+  };
+
+  afterEach(() => {
+    for (const [key, value] of [
+      ["VERCEL_GIT_COMMIT_SHA", saved.sha],
+      ["ENVIRONMENT_LABEL", saved.label],
+    ] as const) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  });
+
+  it("shows the deployed commit, shortened", () => {
+    process.env.VERCEL_GIT_COMMIT_SHA = "4e095c7e36b0cc1b1bade32018da301a85eb7235";
+    delete process.env.ENVIRONMENT_LABEL;
+    render(<Shell title="Menu">x</Shell>);
+    expect(screen.getByText("Version 4e095c7")).toBeInTheDocument();
+  });
+
+  it("names the environment on QA", () => {
+    process.env.VERCEL_GIT_COMMIT_SHA = "4e095c7e36b0cc1b1bade32018da301a85eb7235";
+    process.env.ENVIRONMENT_LABEL = "QA";
+    render(<Shell title="Menu">x</Shell>);
+    expect(screen.getByText("Version 4e095c7 · QA")).toBeInTheDocument();
+  });
+
+  it("says local when it is not a Vercel build", () => {
+    delete process.env.VERCEL_GIT_COMMIT_SHA;
+    delete process.env.ENVIRONMENT_LABEL;
+    render(<Shell title="Menu">x</Shell>);
+    expect(screen.getByText("Version local")).toBeInTheDocument();
+  });
+});
+
 describe("the frame", () => {
   it("shows the title and the page's own content", () => {
     render(
