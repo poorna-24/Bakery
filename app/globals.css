@@ -186,6 +186,19 @@ body {
   --text: #2b1e14;
   --muted: #7a6a5b;
   --line: #e5dcd0;
+  /* The dashboard is always light, so pin what the menu flips for dark mode:
+     the card colour, and the ink of the background patterns it shares with
+     the menu (Appearance). Left to follow the phone, a dark-mode visit put
+     dark cards and pale patterns under the dashboard's dark text. */
+  --surface: #ffffff;
+  --pattern-ink: rgba(58, 36, 24, 0.09);
+  --pattern-ink-soft: rgba(58, 36, 24, 0.05);
+  --pattern-glow: rgba(224, 164, 92, 0.28);
+}
+
+/* Same reason: a light scrim over an uploaded photo, whatever the phone's mode. */
+.admin-theme .scrim {
+  background-color: rgb(247 244 239 / 0.88);
 }
 
 @layer components {
