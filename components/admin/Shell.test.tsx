@@ -113,6 +113,7 @@ describe("the frame", () => {
       "/admin/appearance",
     );
     expect(within(bar).getByRole("link", { name: "Preview" })).toHaveAttribute("href", "/admin/preview");
+    expect(within(bar).getByRole("link", { name: "QR code" })).toHaveAttribute("href", "/admin/qr");
   });
 });
 

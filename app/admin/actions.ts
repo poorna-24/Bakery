@@ -334,7 +334,8 @@ export async function saveAppearance(formData: FormData) {
     }),
   ]);
 
-  revalidatePath("/admin/appearance");
+  // The whole dashboard wears this background too, so refresh its layout.
+  revalidatePath("/admin", "layout");
   redirect("/admin/appearance?saved=1");
 }
 
@@ -362,7 +363,8 @@ export async function removeBackgroundImage() {
     }),
   ]);
 
-  revalidatePath("/admin/appearance");
+  // The whole dashboard wears this background too, so refresh its layout.
+  revalidatePath("/admin", "layout");
   redirect("/admin/appearance?saved=1");
 }
 

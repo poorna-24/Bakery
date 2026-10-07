@@ -42,6 +42,9 @@ export default function Shell({
             <Link href="/admin/preview" className="rounded-lg px-3 py-1.5 hover:bg-[var(--bg)]">
               Preview
             </Link>
+            <Link href="/admin/qr" className="rounded-lg px-3 py-1.5 hover:bg-[var(--bg)]">
+              QR code
+            </Link>
             <form action={signOut}>
               <button type="submit" className="rounded-lg px-3 py-1.5 hover:bg-[var(--bg)]">
                 Sign out
