@@ -65,6 +65,21 @@ export default function Shell({
 
         <div className="mt-6">{children}</div>
       </main>
+
+      <footer className="mx-auto max-w-5xl px-4 pb-6 text-xs text-[var(--muted)]">
+        {versionLabel()}
+      </footer>
     </div>
   );
+}
+
+/**
+ * Which build this is: the commit Vercel deployed, plus the environment on QA.
+ * With dev, qa and main deployed side by side, it answers "is my change live
+ * here yet?" at a glance.
+ */
+function versionLabel(): string {
+  const commit = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) || "local";
+  const environment = process.env.ENVIRONMENT_LABEL?.trim();
+  return environment ? `Version ${commit} · ${environment}` : `Version ${commit}`;
 }
