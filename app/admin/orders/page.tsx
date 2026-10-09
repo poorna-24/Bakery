@@ -85,13 +85,13 @@ export default async function OrdersPage({
         />
       </div>
 
-      <nav className="mt-6 flex flex-wrap gap-1.5" aria-label="Order status">
+      <nav className="no-scrollbar -mx-4 mt-6 flex gap-1.5 overflow-x-auto px-4 md:mx-0 md:flex-wrap md:px-0" aria-label="Order status">
         {VIEWS.map((key) => (
           <Link
             key={key}
             href={href({ view: key })}
             aria-current={key === view ? "page" : undefined}
-            className={`rounded-full px-3 py-1 text-sm ${
+            className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-sm ${
               key === view
                 ? "bg-[var(--accent)] font-semibold text-white"
                 : "bg-white text-[var(--muted)] ring-1 ring-[var(--line)]"

@@ -47,7 +47,7 @@ export default function OrdersSummary({
 
   return (
     <section className="space-y-4">
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-5 [&>*:last-child]:col-span-2 md:[&>*:last-child]:col-span-1">
         <Tile label="Orders" value={String(summary.orders)} />
         <Tile label="Sales" value={formatPrice(Math.round(summary.sales))} />
         <Tile label="Average order" value={formatPrice(Math.round(summary.average))} />

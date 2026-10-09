@@ -397,6 +397,20 @@ describe("when saving the order goes wrong", () => {
     expect(screen.getByText(/without reaching the shop's list/i)).toBeInTheDocument();
   });
 
+  it("offers WhatsApp anyway when the shop could not save the order", async () => {
+    await tryTableOrder(
+      vi.fn().mockResolvedValue({ ok: false, fallback: true, error: "We couldn't save your order just now." }),
+    );
+    expect(await screen.findByRole("alert")).toHaveTextContent("We couldn't save your order just now.");
+    expect(screen.getByRole("button", { name: /send it on whatsapp anyway/i })).toBeInTheDocument();
+  });
+
+  it("does not offer WhatsApp anyway for an order the shop refused", async () => {
+    await tryTableOrder(vi.fn().mockResolvedValue({ ok: false, error: "The shop isn't taking orders here right now." }));
+    await screen.findByRole("alert");
+    expect(screen.queryByRole("button", { name: /send it on whatsapp anyway/i })).not.toBeInTheDocument();
+  });
+
   it("shows that it is working while the order is saved", async () => {
     const user = userEvent.setup();
     renderSheet({ submit: vi.fn(() => new Promise<never>(() => {})) });

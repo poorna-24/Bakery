@@ -229,7 +229,7 @@ export default function Menu({
 
   return (
     // Room at the bottom for the cart bar, so it never covers the footer.
-    <main className={`mx-auto min-h-dvh max-w-screen-sm ${count > 0 ? "pb-28" : "pb-16"}`}>
+    <main className={`mx-auto min-h-dvh max-w-screen-sm md:max-w-3xl lg:max-w-5xl ${count > 0 ? "pb-28" : "pb-16"}`}>
       <Backdrop appearance={appearance} />
 
       {offer && <OfferBanner offer={offer} />}
@@ -405,7 +405,7 @@ export default function Menu({
               </div>
 
               {takingOrders ? (
-                <div className="mt-4 space-y-2.5">
+                <div className="mt-4 grid gap-2.5 md:grid-cols-2 md:gap-3">
                   {category.items.map((item) => (
                     <OrderItemRow
                       key={item.id}
@@ -417,7 +417,7 @@ export default function Menu({
                   ))}
                 </div>
               ) : (
-                <div className="mt-4 grid grid-cols-2 gap-3">
+                <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 lg:gap-4">
                   {category.items.map((item) => (
                     <ItemCard key={item.id} item={item} onOpen={() => setSelected(item)} />
                   ))}

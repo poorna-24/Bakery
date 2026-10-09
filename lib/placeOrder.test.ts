@@ -203,3 +203,18 @@ describe("placeOrder", () => {
     });
   });
 });
+
+describe("placeOrder when the database fails", () => {
+  it("logs the cause and lets the customer send on WhatsApp instead", async () => {
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
+    prisma.order.create.mockRejectedValue(new Error('relation "Order" does not exist'));
+
+    expect(await placeOrder(tableOrder, client())).toEqual({
+      ok: false,
+      fallback: true,
+      error: "We couldn't save your order just now. You can still send it to us on WhatsApp.",
+    });
+    expect(logged).toHaveBeenCalledWith("Saving an order failed:", expect.any(Error));
+    logged.mockRestore();
+  });
+});

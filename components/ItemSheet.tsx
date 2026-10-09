@@ -43,7 +43,7 @@ export default function ItemSheet({ item, phone, whatsapp, shopName, onClose }: 
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center"
+      className="fixed inset-0 z-50 flex items-end justify-center md:items-center md:p-6"
       role="dialog"
       aria-modal="true"
       aria-label={item.name}
@@ -55,7 +55,7 @@ export default function ItemSheet({ item, phone, whatsapp, shopName, onClose }: 
         className="absolute inset-0 animate-fadeIn bg-black/50"
       />
 
-      <div className="relative max-h-[88dvh] w-full max-w-screen-sm animate-sheetUp overflow-y-auto rounded-t-3xl bg-[var(--surface)] pb-[env(safe-area-inset-bottom)]">
+      <div className="relative max-h-[88dvh] w-full max-w-screen-sm animate-sheetUp overflow-y-auto rounded-t-3xl md:max-h-[85dvh] md:max-w-lg md:rounded-3xl md:shadow-2xl bg-[var(--surface)] pb-[env(safe-area-inset-bottom)]">
         <div className="sticky top-0 flex justify-center bg-[var(--surface)] pb-1 pt-3">
           <span className="h-1.5 w-11 rounded-full bg-[var(--line)]" />
         </div>

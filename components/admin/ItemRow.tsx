@@ -27,7 +27,9 @@ export default function ItemRow({
   const [confirming, setConfirming] = useState(false);
 
   return (
-    <div className="flex items-center gap-3 p-3">
+    // On a phone the buttons take a line of their own, so the name and price
+    // keep the full width beside the photo.
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 p-3">
       <div className="flex flex-col">
         <Move id={item.id} direction="up" disabled={isFirst} />
         <Move id={item.id} direction="down" disabled={isLast} />
@@ -58,36 +60,38 @@ export default function ItemRow({
         </p>
       </div>
 
-      <form action={toggleItemAvailable}>
-        <input type="hidden" name="id" value={item.id} />
-        <button
-          type="submit"
-          className={`btn ${
-            item.isAvailable
-              ? "border border-emerald-200 bg-emerald-50 text-emerald-700"
-              : "border border-red-200 bg-red-50 text-[var(--danger)]"
-          }`}
-          title="Click to flip"
-        >
-          {item.isAvailable ? "Available" : "Sold out"}
-        </button>
-      </form>
-
-      <Link href={`/admin/items/${item.id}`} className="btn-ghost">Edit</Link>
-
-      {confirming ? (
-        <form action={deleteItem} className="flex items-center gap-1">
+      <div className="flex w-full items-center justify-end gap-2 sm:w-auto">
+        <form action={toggleItemAvailable}>
           <input type="hidden" name="id" value={item.id} />
-          <button type="submit" className="btn-danger">Confirm</button>
-          <button type="button" onClick={() => setConfirming(false)} className="btn-ghost">
-            No
+          <button
+            type="submit"
+            className={`btn ${
+              item.isAvailable
+                ? "border border-emerald-200 bg-emerald-50 text-emerald-700"
+                : "border border-red-200 bg-red-50 text-[var(--danger)]"
+            }`}
+            title="Click to flip"
+          >
+            {item.isAvailable ? "Available" : "Sold out"}
           </button>
         </form>
-      ) : (
-        <button type="button" onClick={() => setConfirming(true)} className="btn-danger">
-          Delete
-        </button>
-      )}
+
+        <Link href={`/admin/items/${item.id}`} className="btn-ghost">Edit</Link>
+
+        {confirming ? (
+          <form action={deleteItem} className="flex items-center gap-1">
+            <input type="hidden" name="id" value={item.id} />
+            <button type="submit" className="btn-danger">Confirm</button>
+            <button type="button" onClick={() => setConfirming(false)} className="btn-ghost">
+              No
+            </button>
+          </form>
+        ) : (
+          <button type="button" onClick={() => setConfirming(true)} className="btn-danger">
+            Delete
+          </button>
+        )}
+      </div>
     </div>
   );
 }

@@ -10,12 +10,17 @@ import {
   toOrderingSettings,
   type Cart,
 } from "./ordering";
-import { parseOrderRequest, priceOrder } from "./orders";
+import { parseOrderRequest, priceOrder, type OrderRequest } from "./orders";
 import { createRateLimiter } from "./rateLimit";
 
 export type PlaceOrderResult =
   | { ok: true; code: string; cart: Cart; total: number }
-  | { ok: false; error: string };
+  /**
+   * `fallback` means the order was fine but could not be saved — the
+   * database is down, or not set up. The customer can still send it on
+   * WhatsApp; the shop just won't see it in the dashboard.
+   */
+  | { ok: false; error: string; fallback?: boolean };
 
 // Twenty orders in ten minutes from one address: plenty for a busy shop on
 // one Wi-Fi, far too few to flood the dashboard.
@@ -35,6 +40,20 @@ export async function placeOrder(body: unknown, client: { ip: string }): Promise
   const request = parseOrderRequest(body);
   if ("error" in request) return { ok: false, error: request.error };
 
+  try {
+    return await checkAndSave(request);
+  } catch (error) {
+    // Logged for the owner (Vercel → Logs); the customer gets a way forward.
+    console.error("Saving an order failed:", error);
+    return {
+      ok: false,
+      fallback: true,
+      error: "We couldn't save your order just now. You can still send it to us on WhatsApp.",
+    };
+  }
+}
+
+async function checkAndSave(request: OrderRequest): Promise<PlaceOrderResult> {
   const settingRows = await prisma.setting.findMany();
   const config = orderingConfig(
     toOrderingSettings(settingRows),
