@@ -35,3 +35,31 @@ export function adminManifest(shopName: string) {
     ],
   };
 }
+
+// The customer menu as an app of its own: a regular can keep the shop on
+// their home screen and open it straight onto the menu and ordering. A
+// different icon from the dashboard's, so the owner can tell the two apart.
+
+export const MENU_MANIFEST_PATH = "/menu-app.webmanifest";
+export const MENU_THEME_COLOR = "#fdf6ec";
+
+export function menuManifest(shopName: string, tagline: string) {
+  const name = shopName.trim() || "Bakery";
+  return {
+    id: "/",
+    name,
+    short_name: shortName(name),
+    description: tagline.trim() || `The menu at ${name}.`,
+    start_url: "/",
+    scope: "/",
+    display: "standalone",
+    orientation: "portrait",
+    background_color: MENU_THEME_COLOR,
+    theme_color: MENU_THEME_COLOR,
+    icons: [
+      { src: "/icons/menu-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/icons/menu-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/icons/menu-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+    ],
+  };
+}
