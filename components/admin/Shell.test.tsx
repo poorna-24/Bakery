@@ -108,6 +108,8 @@ describe("the frame", () => {
     expect(within(bar).getByRole("link", { name: "Menu" })).toHaveAttribute("href", "/admin");
     expect(within(bar).getByRole("link", { name: "Offers" })).toHaveAttribute("href", "/admin/offers");
     expect(within(bar).getByRole("link", { name: "Hours" })).toHaveAttribute("href", "/admin/hours");
+    expect(within(bar).getByRole("link", { name: "Ordering" })).toHaveAttribute("href", "/admin/ordering");
+    expect(within(bar).getByRole("link", { name: "Orders" })).toHaveAttribute("href", "/admin/orders");
     expect(within(bar).getByRole("link", { name: "Appearance" })).toHaveAttribute(
       "href",
       "/admin/appearance",

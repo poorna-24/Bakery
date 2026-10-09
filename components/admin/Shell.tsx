@@ -22,19 +22,25 @@ export default function Shell({
   return (
     <div className="min-h-dvh">
       <header className="border-b border-[var(--line)] bg-[var(--surface)]">
-        <div className="mx-auto flex max-w-5xl items-center gap-4 px-4 py-3">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
           <Link href="/admin" className="font-extrabold uppercase tracking-tight text-[var(--accent)]">
             {process.env.SHOP_NAME ?? "Bakery"} Admin
           </Link>
-          <nav className="ml-auto flex items-center gap-1 text-sm">
+          <nav className="ml-auto flex flex-wrap items-center gap-1 text-sm">
             <Link href="/admin" className="rounded-lg px-3 py-1.5 hover:bg-[var(--bg)]">
               Menu
+            </Link>
+            <Link href="/admin/orders" className="rounded-lg px-3 py-1.5 hover:bg-[var(--bg)]">
+              Orders
             </Link>
             <Link href="/admin/offers" className="rounded-lg px-3 py-1.5 hover:bg-[var(--bg)]">
               Offers
             </Link>
             <Link href="/admin/hours" className="rounded-lg px-3 py-1.5 hover:bg-[var(--bg)]">
               Hours
+            </Link>
+            <Link href="/admin/ordering" className="rounded-lg px-3 py-1.5 hover:bg-[var(--bg)]">
+              Ordering
             </Link>
             <Link href="/admin/appearance" className="rounded-lg px-3 py-1.5 hover:bg-[var(--bg)]">
               Appearance

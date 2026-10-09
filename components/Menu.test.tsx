@@ -2,11 +2,25 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import Menu from "./Menu";
 import type { MenuCategory } from "@/lib/types";
 import { DEFAULT_APPEARANCE } from "@/lib/backgrounds";
 import type { Offer } from "@/lib/offer";
 import type { ShopHours, ShopStatus } from "@/lib/hours";
+
+// Saving an order is the server's job; here it always succeeds.
+const { orderActions } = vi.hoisted(() => ({
+  orderActions: {
+    submitOrder: vi.fn(async (body: { lines: { qty: number }[] }) => ({
+      ok: true,
+      code: "T3ST",
+      cart: [],
+      total: body.lines.length,
+    })),
+  },
+}));
+vi.mock("@/app/order-actions", () => orderActions);
+
+const { default: Menu } = await import("./Menu");
 
 const categories: MenuCategory[] = [
   {
@@ -632,5 +646,130 @@ describe("the category chips", () => {
 
       expect(rail.scrollTo).not.toHaveBeenCalled();
     });
+  });
+});
+
+describe("ordering on WhatsApp", () => {
+  const ordering = {
+    modes: ["table", "counter"] as ("table" | "counter")[],
+    tables: 8,
+    whatsapp: "+91 76660 93143",
+    minOrder: 0,
+    onlyWhenOpen: true,
+    payments: [],
+    upiId: "",
+    upiQr: "",
+  };
+
+  beforeEach(() => window.localStorage.clear());
+  afterEach(() => {
+    window.localStorage.clear();
+    vi.restoreAllMocks();
+  });
+
+  it("is not offered unless the owner switches it on", () => {
+    renderMenu();
+    expect(screen.getByText("Our Menu")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /order on whatsapp/i })).not.toBeInTheDocument();
+  });
+
+  it("starts on the familiar menu, with ordering one tap away", async () => {
+    const user = userEvent.setup();
+    renderMenu({ ordering });
+
+    expect(screen.queryByText("Our Menu")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Menu" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.queryByRole("button", { name: /^add /i })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /order on whatsapp/i }));
+    expect(screen.getByRole("button", { name: /order on whatsapp/i })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Add Choco Truffle Cake (500 g)" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Add Chicken Puff" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Menu" }));
+    expect(screen.queryByRole("button", { name: /^add /i })).not.toBeInTheDocument();
+  });
+
+  it("builds an order, remembers it on the phone, and clears it when done", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(window, "open").mockImplementation(() => null);
+    renderMenu({ ordering });
+
+    await user.click(screen.getByRole("button", { name: /order on whatsapp/i }));
+    await user.click(screen.getByRole("button", { name: "Add Chicken Puff" }));
+    await user.click(screen.getByRole("button", { name: "Add one more Chicken Puff" }));
+    await user.click(screen.getByRole("button", { name: "Add Choco Truffle Cake (500 g)" }));
+
+    expect(screen.getByRole("button", { name: /review order/i })).toHaveTextContent("3 items · ₹430");
+    expect(JSON.parse(window.localStorage.getItem("bakery.cart") ?? "[]")).toHaveLength(2);
+
+    await user.click(screen.getByRole("button", { name: /review order/i }));
+    expect(screen.getByRole("dialog", { name: "Your order" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /review order/i })).not.toBeInTheDocument();
+
+    const sheet = screen.getByRole("dialog");
+    await user.click(within(sheet).getByRole("button", { name: "Remove one Chicken Puff" }));
+    expect(within(sheet).getByText("₹390")).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /review order/i }));
+    await user.click(screen.getByRole("button", { name: /i'm at the counter/i }));
+    await user.type(screen.getByLabelText("Your name"), "Ravi");
+    await user.type(screen.getByLabelText("Phone number"), "98765 43210");
+    await user.click(screen.getByRole("button", { name: /send order on whatsapp/i }));
+    expect(await screen.findByRole("heading", { name: "Order #T3ST" })).toBeInTheDocument();
+    expect(orderActions.submitOrder).toHaveBeenCalled();
+    expect(window.open).toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: /done — start a new order/i }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /review order/i })).not.toBeInTheDocument();
+    expect(window.localStorage.getItem("bakery.cart")).toBeNull();
+  });
+
+  it("brings back an order started earlier, minus what is sold out", async () => {
+    window.localStorage.setItem(
+      "bakery.cart",
+      JSON.stringify([
+        { key: "i3", itemId: "i3", name: "Chicken Puff", size: null, price: 35, qty: 2 },
+        { key: "i2", itemId: "i2", name: "Fresh Pineapple Cake", size: null, price: 550, qty: 1 },
+      ]),
+    );
+    renderMenu({ ordering });
+
+    // Today's price, and the sold-out cake gone.
+    expect(await screen.findByRole("button", { name: /review order/i })).toHaveTextContent("2 items · ₹80");
+  });
+
+  it("ignores a remembered order while ordering is switched off", () => {
+    window.localStorage.setItem(
+      "bakery.cart",
+      JSON.stringify([{ key: "i3", itemId: "i3", name: "Chicken Puff", size: null, price: 40, qty: 2 }]),
+    );
+    renderMenu();
+    expect(screen.queryByRole("button", { name: /review order/i })).not.toBeInTheDocument();
+  });
+
+  it("warns on the order tab while the shop is closed", async () => {
+    const user = userEvent.setup();
+    const closed: ShopStatus = { isOpen: false, label: "Closed", detail: "Opens 7:00 am" };
+    const hours: ShopHours = { open: "07:00", close: "21:00", closedDays: [] };
+    renderMenu({ ordering, hours, hoursStatus: closed });
+
+    expect(screen.queryByText(/we're closed right now/i)).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /order on whatsapp/i }));
+    expect(screen.getByText(/we're closed right now \(opens 7:00 am\)/i)).toBeInTheDocument();
+  });
+
+  it("says nothing about closing when the shop is open", async () => {
+    const user = userEvent.setup();
+    const open: ShopStatus = { isOpen: true, label: "Open now", detail: "7:00 am – 9:00 pm" };
+    const hours: ShopHours = { open: "07:00", close: "21:00", closedDays: [] };
+    renderMenu({ ordering, hours, hoursStatus: open });
+
+    await user.click(screen.getByRole("button", { name: /order on whatsapp/i }));
+    expect(screen.queryByText(/we're closed right now/i)).not.toBeInTheDocument();
   });
 });
