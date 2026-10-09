@@ -1,17 +1,33 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { MenuCategory, MenuItem } from "@/lib/types";
 import type { Appearance } from "@/lib/backgrounds";
 import type { ShopHours, ShopStatus } from "@/lib/hours";
 import type { Offer } from "@/lib/offer";
 import ItemCard from "./ItemCard";
 import ItemSheet from "./ItemSheet";
-import Footer from "./Footer";
+import Footer, { WhatsAppIcon } from "./Footer";
 import Backdrop from "./Backdrop";
 import Wordmark, { Flourish } from "./Wordmark";
 import OpenStatus from "./OpenStatus";
 import OfferBanner from "./OfferBanner";
+import OrderItemRow from "./OrderItemRow";
+import CartBar from "./CartBar";
+import OrderSheet from "./OrderSheet";
+import {
+  addToCart,
+  browserStorage,
+  cartCount,
+  cartTotal,
+  changeQty,
+  loadCart,
+  orderingClosed,
+  reconcileCart,
+  saveCart,
+  type Cart,
+  type OrderingConfig,
+} from "@/lib/ordering";
 
 type Props = {
   categories: MenuCategory[];
@@ -26,6 +42,8 @@ type Props = {
   hours: ShopHours | null;
   hoursStatus: ShopStatus | null;
   offer: Offer | null;
+  /** WhatsApp ordering, or null/absent for a browse-only menu. */
+  ordering?: OrderingConfig | null;
 };
 
 export default function Menu({
@@ -41,6 +59,7 @@ export default function Menu({
   hours,
   hoursStatus,
   offer,
+  ordering = null,
 }: Props) {
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -48,6 +67,9 @@ export default function Menu({
   const [selected, setSelected] = useState<MenuItem | null>(null);
   // Drives the compact name in the sticky bar, once the hero is out of sight.
   const [pastHero, setPastHero] = useState(false);
+  const [tab, setTab] = useState<"menu" | "order">("menu");
+  const [cart, setCart] = useState<Cart>([]);
+  const [reviewing, setReviewing] = useState(false);
 
   const searchInput = useRef<HTMLInputElement>(null);
   const chipRail = useRef<HTMLDivElement>(null);
@@ -57,6 +79,20 @@ export default function Menu({
   const jumpTimer = useRef<number | undefined>(undefined);
 
   useEffect(() => () => window.clearTimeout(jumpTimer.current), []);
+
+  // Bring back an order started earlier on this phone, minus anything the menu
+  // no longer sells. After mount, because the server cannot see the phone.
+  useEffect(() => {
+    if (ordering) setCart(reconcileCart(loadCart(browserStorage()), categories));
+  }, [ordering, categories]);
+
+  function updateCart(next: Cart) {
+    setCart(next);
+    saveCart(browserStorage(), next);
+  }
+
+  const takingOrders = ordering !== null && tab === "order";
+  const count = ordering ? cartCount(cart) : 0;
 
   const searching = query.trim().length > 0;
 
@@ -181,6 +217,9 @@ export default function Menu({
     requestAnimationFrame(() => searchInput.current?.focus());
   }
 
+  // Stable, because the sheet re-binds its Escape key whenever this changes.
+  const closeReview = useCallback(() => setReviewing(false), []);
+
   function closeSearch() {
     setQuery("");
     setSearchOpen(false);
@@ -189,7 +228,8 @@ export default function Menu({
   const itemCount = categories.reduce((total, category) => total + category.items.length, 0);
 
   return (
-    <main className="mx-auto min-h-dvh max-w-screen-sm pb-16">
+    // Room at the bottom for the cart bar, so it never covers the footer.
+    <main className={`mx-auto min-h-dvh max-w-screen-sm ${count > 0 ? "pb-28" : "pb-16"}`}>
       <Backdrop appearance={appearance} />
 
       {offer && <OfferBanner offer={offer} />}
@@ -259,9 +299,52 @@ export default function Menu({
           </p>
 
           {hours && hoursStatus && <OpenStatus hours={hours} initial={hoursStatus} />}
-          <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.3em] text-[var(--muted)]">
-            Our Menu
-          </p>
+          {ordering ? (
+            // Left: the menu exactly as it has always been. Right: the same
+            // items, ready to add to an order sent on WhatsApp.
+            <div className="mx-auto mt-6 grid max-w-sm grid-cols-2 gap-1 rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-1">
+              {(["menu", "order"] as const).map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => setTab(option)}
+                  aria-pressed={tab === option}
+                  className={`relative flex items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-2 py-2.5 text-[13px] font-semibold transition-colors ${
+                    tab === option
+                      ? "bg-[var(--surface)] text-[var(--text)] shadow-sm ring-1 ring-[var(--accent)]"
+                      : "text-[var(--muted)]"
+                  }`}
+                >
+                  {option === "menu" ? (
+                    "Menu"
+                  ) : (
+                    <>
+                      <span className="text-[#15803d]">
+                        <WhatsAppIcon />
+                      </span>
+                      Order on WhatsApp
+                      {count > 0 && (
+                        <span className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-[var(--accent)] px-1 text-[11px] font-bold text-white ring-2 ring-[var(--bg)]">
+                          {count}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.3em] text-[var(--muted)]">
+              Our Menu
+            </p>
+          )}
+
+          {takingOrders && hoursStatus && orderingClosed(ordering, hoursStatus) && (
+            <p className="mx-auto mt-3 max-w-sm rounded-xl bg-[var(--surface)] px-3 py-2 text-sm text-[var(--muted)]">
+              We&apos;re closed right now ({hoursStatus.detail}). You can build your order and send
+              it once we open.
+            </p>
+          )}
         </section>
       )}
 
@@ -321,11 +404,25 @@ export default function Menu({
                 )}
               </div>
 
-              <div className="mt-4 grid grid-cols-2 gap-3">
-                {category.items.map((item) => (
-                  <ItemCard key={item.id} item={item} onOpen={() => setSelected(item)} />
-                ))}
-              </div>
+              {takingOrders ? (
+                <div className="mt-4 space-y-2.5">
+                  {category.items.map((item) => (
+                    <OrderItemRow
+                      key={item.id}
+                      item={item}
+                      cart={cart}
+                      onAdd={(line) => updateCart(addToCart(cart, line))}
+                      onChange={(key, delta) => updateCart(changeQty(cart, key, delta))}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  {category.items.map((item) => (
+                    <ItemCard key={item.id} item={item} onOpen={() => setSelected(item)} />
+                  ))}
+                </div>
+              )}
             </section>
           ))}
         </div>
@@ -338,6 +435,7 @@ export default function Menu({
         phone={phone}
         whatsapp={whatsapp}
         credit={credit}
+        status={hours ? hoursStatus : null}
       />
 
       {selected && (
@@ -347,6 +445,36 @@ export default function Menu({
           whatsapp={whatsapp}
           shopName={shopName}
           onClose={() => setSelected(null)}
+        />
+      )}
+
+      {ordering && count > 0 && !reviewing && (
+        <CartBar
+          count={count}
+          total={cartTotal(cart)}
+          onOpen={() => setReviewing(true)}
+          // A light reminder while browsing; the full bar while ordering.
+          quiet={!takingOrders}
+        />
+      )}
+
+      {ordering && reviewing && (
+        <OrderSheet
+          config={ordering}
+          cart={cart}
+          shopName={shopName}
+          hours={hours}
+          onChange={(key, delta) => updateCart(changeQty(cart, key, delta))}
+          onClose={closeReview}
+          onAddMore={() => {
+            // The review can be opened from the Menu tab too; adding happens on the order tab.
+            setReviewing(false);
+            setTab("order");
+          }}
+          onDone={() => {
+            updateCart([]);
+            setReviewing(false);
+          }}
         />
       )}
     </main>

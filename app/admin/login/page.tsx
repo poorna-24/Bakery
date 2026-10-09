@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
-import { checkCredentials, createSession } from "@/lib/auth";
+import { headers } from "next/headers";
+import { allowLoginAttempt, checkCredentials, createSession, safeNextPath } from "@/lib/auth";
+import { clientKey } from "@/lib/rateLimit";
 
 export default async function LoginPage({
   searchParams,
@@ -13,15 +15,20 @@ export default async function LoginPage({
 
     const email = String(formData.get("email") ?? "");
     const password = String(formData.get("password") ?? "");
-    const target = String(formData.get("next") ?? "/admin") || "/admin";
+    const target = safeNextPath(String(formData.get("next") ?? ""));
+    const back = target !== "/admin" ? `&next=${encodeURIComponent(target)}` : "";
+
+    // Counted before the password is even checked, so guessing costs the
+    // same whether the guesses are right or wrong.
+    if (!allowLoginAttempt(clientKey(await headers()))) redirect(`/admin/login?error=locked${back}`);
 
     if (!(await checkCredentials(email, password))) {
       // Deliberately vague: never say which half was wrong.
-      redirect(`/admin/login?error=1${target !== "/admin" ? `&next=${encodeURIComponent(target)}` : ""}`);
+      redirect(`/admin/login?error=1${back}`);
     }
 
     await createSession(email);
-    redirect(target.startsWith("/") ? target : "/admin");
+    redirect(target);
   }
 
   return (
@@ -34,11 +41,13 @@ export default async function LoginPage({
 
         {error && (
           <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-[var(--danger)]">
-            Wrong email or password.
+            {error === "locked"
+              ? "Too many sign-in attempts. Please wait 15 minutes and try again."
+              : "Wrong email or password."}
           </p>
         )}
 
-        <input type="hidden" name="next" value={next ?? "/admin"} />
+        <input type="hidden" name="next" value={safeNextPath(next)} />
 
         <div className="mt-5">
           <label className="label" htmlFor="email">Email</label>

@@ -28,6 +28,7 @@ const { prisma } = vi.hoisted(() => ({
     },
     itemVariant: { deleteMany: vi.fn() },
     setting: { findUnique: vi.fn(), upsert: vi.fn(), deleteMany: vi.fn() },
+    order: { update: vi.fn() },
     $transaction: vi.fn(),
   },
 }));
@@ -48,7 +49,11 @@ class Redirected extends Error {
   }
 }
 
+/** The session check every action starts with; signed in unless a test says otherwise. */
+const { auth } = vi.hoisted(() => ({ auth: { requireAdmin: vi.fn() } }));
+
 vi.mock("@/lib/db", () => ({ prisma }));
+vi.mock("@/lib/auth", () => auth);
 vi.mock("@/lib/saveImage", () => images);
 vi.mock("next/cache", () => ({ revalidatePath }));
 vi.mock("next/navigation", () => ({
@@ -86,6 +91,7 @@ function withFile(fields: Record<string, string | string[]>, bytes = 3): FormDat
 }
 
 beforeEach(() => {
+  auth.requireAdmin.mockResolvedValue("owner@bakery.com");
   // Sensible "nothing there yet" answers; each test overrides what it needs.
   prisma.category.findUnique.mockResolvedValue(null);
   prisma.category.findFirst.mockResolvedValue(null);
@@ -1001,5 +1007,254 @@ describe("removeOffer", () => {
       },
     });
     expect(to).toBe("/admin/offers?saved=1");
+  });
+});
+
+// -------------------------------------------------------------------- ordering
+
+describe("saveOrdering", () => {
+  const originalWhatsapp = process.env.SHOP_WHATSAPP;
+  const originalPhone = process.env.SHOP_PHONE;
+
+  beforeEach(() => {
+    process.env.SHOP_WHATSAPP = "+91 76660 93143";
+    delete process.env.SHOP_PHONE;
+  });
+
+  afterEach(() => {
+    if (originalWhatsapp === undefined) delete process.env.SHOP_WHATSAPP;
+    else process.env.SHOP_WHATSAPP = originalWhatsapp;
+    if (originalPhone === undefined) delete process.env.SHOP_PHONE;
+    else process.env.SHOP_PHONE = originalPhone;
+  });
+
+  function saved(key: string): string | undefined {
+    const call = prisma.setting.upsert.mock.calls.find(([args]) => args.where.key === key);
+    return call?.[0].create.value;
+  }
+
+  it("switches ordering on with table and counter orders", async () => {
+    const to = await redirectTo(() =>
+      actions.saveOrdering(
+        form({ enabled: "on", table: "on", counter: "on", tables: "8", onlyWhenOpen: "on" }),
+      ),
+    );
+
+    expect(saved("ordering.enabled")).toBe("1");
+    expect(saved("ordering.table")).toBe("1");
+    expect(saved("ordering.counter")).toBe("1");
+    expect(saved("ordering.pickup")).toBe("0");
+    expect(saved("ordering.delivery")).toBe("0");
+    expect(saved("ordering.tables")).toBe("8");
+    expect(saved("ordering.whatsapp")).toBe("");
+    expect(saved("ordering.minOrder")).toBe("0");
+    expect(saved("ordering.onlyWhenOpen")).toBe("1");
+    expect(revalidatePath).toHaveBeenCalledWith("/");
+    expect(to).toBe("/admin/ordering?saved=1");
+  });
+
+  it("saves a number of its own and a minimum order", async () => {
+    await redirectTo(() =>
+      actions.saveOrdering(
+        form({ enabled: "on", counter: "on", whatsapp: "98765 43210", minOrder: "199.6" }),
+      ),
+    );
+    expect(saved("ordering.whatsapp")).toBe("98765 43210");
+    expect(saved("ordering.minOrder")).toBe("200");
+  });
+
+  it("switches ordering off without asking for anything else", async () => {
+    delete process.env.SHOP_WHATSAPP;
+    const to = await redirectTo(() => actions.saveOrdering(form({})));
+
+    expect(saved("ordering.enabled")).toBe("0");
+    expect(to).toBe("/admin/ordering?saved=1");
+  });
+
+  it("keeps the saved table count when table orders are off and the box is empty", async () => {
+    await redirectTo(() => actions.saveOrdering(form({ enabled: "on", counter: "on", tables: "" })));
+    expect(saved("ordering.tables")).toBeUndefined();
+  });
+
+  it.each(["", "0", "201", "2.5"])("refuses a table count of %j while table orders are on", async (tables) => {
+    const to = await redirectTo(() => actions.saveOrdering(form({ enabled: "on", table: "on", tables })));
+    expect(decodeURIComponent(to)).toMatch(/how many tables/);
+    expect(prisma.setting.upsert).not.toHaveBeenCalled();
+  });
+
+  it("refuses a WhatsApp number that is too short", async () => {
+    const to = await redirectTo(() =>
+      actions.saveOrdering(form({ enabled: "on", counter: "on", whatsapp: "12345" })),
+    );
+    expect(decodeURIComponent(to)).toMatch(/looks too short/);
+  });
+
+  it("refuses ordering on with no way to order", async () => {
+    const to = await redirectTo(() => actions.saveOrdering(form({ enabled: "on" })));
+    expect(decodeURIComponent(to)).toMatch(/at least one way to order/);
+  });
+
+  it("refuses ordering on with no number to send orders to", async () => {
+    delete process.env.SHOP_WHATSAPP;
+    const to = await redirectTo(() => actions.saveOrdering(form({ enabled: "on", counter: "on" })));
+    expect(decodeURIComponent(to)).toMatch(/Add the WhatsApp number/);
+  });
+
+  it("accepts the shop's phone number when there is no WhatsApp number", async () => {
+    delete process.env.SHOP_WHATSAPP;
+    process.env.SHOP_PHONE = "+91 76660 93143";
+    const to = await redirectTo(() => actions.saveOrdering(form({ enabled: "on", counter: "on" })));
+    expect(to).toBe("/admin/ordering?saved=1");
+  });
+});
+
+describe("saveOrdering — payment", () => {
+  const originalWhatsapp = process.env.SHOP_WHATSAPP;
+  beforeEach(() => {
+    process.env.SHOP_WHATSAPP = "+91 76660 93143";
+  });
+  afterEach(() => {
+    if (originalWhatsapp === undefined) delete process.env.SHOP_WHATSAPP;
+    else process.env.SHOP_WHATSAPP = originalWhatsapp;
+  });
+
+  function saved(key: string): string | undefined {
+    const call = prisma.setting.upsert.mock.calls.find(([args]) => args.where.key === key);
+    return call?.[0].create.value;
+  }
+
+  const base = { enabled: "on", counter: "on" };
+
+  it("saves the ways to pay and the UPI ID", async () => {
+    await redirectTo(() =>
+      actions.saveOrdering(form({ ...base, pay_cash: "on", pay_upi: "on", upiId: "shivam@okaxis" })),
+    );
+    expect(saved("ordering.payments")).toBe("cash,upi");
+    expect(saved("ordering.upiId")).toBe("shivam@okaxis");
+    expect(saved("ordering.upiQr")).toBe("");
+  });
+
+  it("refuses a UPI ID that isn't one", async () => {
+    const to = await redirectTo(() => actions.saveOrdering(form({ ...base, upiId: "shivam" })));
+    expect(decodeURIComponent(to)).toMatch(/UPI ID doesn't look right/);
+    expect(prisma.setting.upsert).not.toHaveBeenCalled();
+  });
+
+  it("won't offer UPI with nothing for customers to pay to", async () => {
+    const to = await redirectTo(() => actions.saveOrdering(form({ ...base, pay_upi: "on" })));
+    expect(decodeURIComponent(to)).toMatch(/Add your UPI ID or upload your UPI QR/);
+  });
+
+  it("saves an uploaded QR, and clears away the one it replaces", async () => {
+    prisma.setting.findUnique.mockResolvedValue({ key: "ordering.upiQr", value: "/uploads/old.png" });
+    images.saveImage.mockResolvedValue({ url: "/uploads/new.png" });
+
+    await redirectTo(() => actions.saveOrdering(withFile({ ...base, pay_upi: "on" })));
+
+    expect(saved("ordering.upiQr")).toBe("/uploads/new.png");
+    expect(images.deleteImage).toHaveBeenCalledWith("/uploads/old.png");
+  });
+
+  it("keeps the saved QR when no new one is chosen", async () => {
+    prisma.setting.findUnique.mockResolvedValue({ key: "ordering.upiQr", value: "/uploads/qr.png" });
+    await redirectTo(() => actions.saveOrdering(form({ ...base, pay_upi: "on" })));
+
+    expect(saved("ordering.upiQr")).toBe("/uploads/qr.png");
+    expect(images.deleteImage).not.toHaveBeenCalled();
+  });
+
+  it("removes the QR when asked", async () => {
+    prisma.setting.findUnique.mockResolvedValue({ key: "ordering.upiQr", value: "/uploads/qr.png" });
+    await redirectTo(() => actions.saveOrdering(form({ ...base, removeUpiQr: "on" })));
+
+    expect(saved("ordering.upiQr")).toBe("");
+    expect(images.deleteImage).toHaveBeenCalledWith("/uploads/qr.png");
+  });
+
+  it("says what was wrong with a QR upload", async () => {
+    images.saveImage.mockResolvedValue({ error: "Image is larger than 5 MB." });
+    const to = await redirectTo(() => actions.saveOrdering(withFile(base)));
+    expect(decodeURIComponent(to)).toMatch(/larger than 5 MB/);
+  });
+});
+
+describe("setOrderStatus", () => {
+  it("moves an order to the chosen status", async () => {
+    await actions.setOrderStatus(form({ id: "o1", status: "ready" }));
+    expect(prisma.order.update).toHaveBeenCalledWith({ where: { id: "o1" }, data: { status: "ready" } });
+    expect(revalidatePath).toHaveBeenCalledWith("/admin/orders");
+  });
+
+  it.each([
+    ["an unknown status", { id: "o1", status: "lost" }],
+    ["no order", { status: "ready" }],
+  ])("ignores %s", async (_, fields) => {
+    await actions.setOrderStatus(form(fields));
+    expect(prisma.order.update).not.toHaveBeenCalled();
+  });
+});
+
+describe("setOrderPaid", () => {
+  it("marks an order paid, and back again", async () => {
+    await actions.setOrderPaid(form({ id: "o1", paid: "1" }));
+    await actions.setOrderPaid(form({ id: "o1", paid: "0" }));
+    expect(prisma.order.update.mock.calls).toEqual([
+      [{ where: { id: "o1" }, data: { paid: true } }],
+      [{ where: { id: "o1" }, data: { paid: false } }],
+    ]);
+  });
+
+  it("ignores a request with no order", async () => {
+    await actions.setOrderPaid(form({ paid: "1" }));
+    expect(prisma.order.update).not.toHaveBeenCalled();
+  });
+});
+
+// ------------------------------------------------------------------- security
+
+describe("every action needs the signed-in owner", () => {
+  // Server actions are endpoints of their own, callable from any route, so the
+  // /admin middleware alone does not protect them. Each must check itself.
+  const everyAction = Object.entries(actions).filter(([, value]) => typeof value === "function");
+
+  it("covers every action the dashboard exports", () => {
+    expect(everyAction.map(([name]) => name).sort()).toEqual(
+      [
+        "createCategory",
+        "createItem",
+        "deleteCategory",
+        "deleteItem",
+        "moveCategory",
+        "moveItem",
+        "removeBackgroundImage",
+        "removeOffer",
+        "saveAppearance",
+        "saveHours",
+        "saveOffer",
+        "saveOrdering",
+        "setOrderPaid",
+        "setOrderStatus",
+        "toggleCategoryVisible",
+        "toggleItemAvailable",
+        "updateCategory",
+        "updateItem",
+      ].sort(),
+    );
+  });
+
+  it.each(everyAction)("%s refuses a visitor who is not signed in, touching nothing", async (_, action) => {
+    auth.requireAdmin.mockImplementation(async () => {
+      throw new Redirected("/admin/login");
+    });
+    const busy = form({ id: "x", name: "Hacked", status: "cancelled", paid: "1", enabled: "on" });
+
+    const to = await redirectTo(() => (action as (data: FormData) => Promise<unknown>)(busy));
+
+    expect(to).toBe("/admin/login");
+    for (const table of [prisma.category, prisma.item, prisma.setting, prisma.order]) {
+      for (const method of Object.values(table)) expect(method).not.toHaveBeenCalled();
+    }
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+    expect(images.deleteImage).not.toHaveBeenCalled();
   });
 });

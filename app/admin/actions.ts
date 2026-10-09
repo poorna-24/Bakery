@@ -3,14 +3,25 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { requireAdmin } from "@/lib/auth";
 import { slugify } from "@/lib/types";
 import { deleteImage, saveImage, saveImageFromUrl } from "@/lib/saveImage";
 import { SETTING_KEYS, isBackgroundId } from "@/lib/backgrounds";
 import { HOURS_KEYS, isValidTime } from "@/lib/hours";
 import { MAX_OFFER_NOTE, MAX_OFFER_TEXT, OFFER_KEYS, isOfferTone } from "@/lib/offer";
+import {
+  MAX_TABLES,
+  ORDERING_KEYS,
+  ORDER_MODES,
+  PAYMENT_METHODS,
+  isUpiId,
+  isWhatsappNumber,
+} from "@/lib/ordering";
+import { isOrderStatus } from "@/lib/orders";
 
-// Every mutation the owner can perform. Middleware has already rejected
-// anyone without a session before these run.
+// Every mutation the owner can perform. Each one checks the session itself
+// (requireAdmin): middleware guards /admin pages by URL, but a server action
+// is its own endpoint and can be called from any route.
 
 function text(formData: FormData, key: string): string {
   return String(formData.get(key) ?? "").trim();
@@ -41,6 +52,7 @@ async function uniqueSlug(name: string, exceptId?: string): Promise<string> {
 // ---------------------------------------------------------------- categories
 
 export async function createCategory(formData: FormData) {
+  await requireAdmin();
   const name = text(formData, "name");
   if (!name) return;
 
@@ -59,6 +71,7 @@ export async function createCategory(formData: FormData) {
 }
 
 export async function updateCategory(formData: FormData) {
+  await requireAdmin();
   const id = text(formData, "id");
   const name = text(formData, "name");
   if (!id || !name) return;
@@ -77,6 +90,7 @@ export async function updateCategory(formData: FormData) {
 }
 
 export async function toggleCategoryVisible(formData: FormData) {
+  await requireAdmin();
   const id = text(formData, "id");
   const category = await prisma.category.findUnique({ where: { id } });
   if (!category) return;
@@ -91,6 +105,7 @@ export async function toggleCategoryVisible(formData: FormData) {
 
 /** Swaps sortOrder with the neighbour above or below. */
 export async function moveCategory(formData: FormData) {
+  await requireAdmin();
   const id = text(formData, "id");
   const direction = text(formData, "direction");
 
@@ -110,6 +125,7 @@ export async function moveCategory(formData: FormData) {
 }
 
 export async function deleteCategory(formData: FormData) {
+  await requireAdmin();
   const id = text(formData, "id");
   const moveTo = text(formData, "moveTo");
 
@@ -157,6 +173,7 @@ function readVariants(formData: FormData) {
 }
 
 export async function createItem(formData: FormData) {
+  await requireAdmin();
   const categoryId = text(formData, "categoryId");
   const name = text(formData, "name");
   if (!categoryId || !name) return;
@@ -194,6 +211,7 @@ export async function createItem(formData: FormData) {
 }
 
 export async function updateItem(formData: FormData) {
+  await requireAdmin();
   const id = text(formData, "id");
   const categoryId = text(formData, "categoryId");
   const name = text(formData, "name");
@@ -242,6 +260,7 @@ export async function updateItem(formData: FormData) {
 }
 
 export async function toggleItemAvailable(formData: FormData) {
+  await requireAdmin();
   const id = text(formData, "id");
   const item = await prisma.item.findUnique({ where: { id } });
   if (!item) return;
@@ -253,6 +272,7 @@ export async function toggleItemAvailable(formData: FormData) {
 }
 
 export async function moveItem(formData: FormData) {
+  await requireAdmin();
   const id = text(formData, "id");
   const direction = text(formData, "direction");
 
@@ -278,6 +298,7 @@ export async function moveItem(formData: FormData) {
 }
 
 export async function deleteItem(formData: FormData) {
+  await requireAdmin();
   const id = text(formData, "id");
 
   const item = await prisma.item.findUnique({ where: { id } });
@@ -299,6 +320,7 @@ export async function deleteItem(formData: FormData) {
  * abandoned backgrounds.
  */
 export async function saveAppearance(formData: FormData) {
+  await requireAdmin();
   const chosen = text(formData, "backgroundId");
   if (!isBackgroundId(chosen)) return;
 
@@ -341,6 +363,7 @@ export async function saveAppearance(formData: FormData) {
 
 /** Removes the uploaded photo and falls back to the plain background. */
 export async function removeBackgroundImage() {
+  await requireAdmin();
   const previousUrl =
     (await prisma.setting.findUnique({ where: { key: SETTING_KEYS.backgroundImageUrl } }))?.value ??
     null;
@@ -372,6 +395,7 @@ export async function removeBackgroundImage() {
 
 /** Saves opening hours and any weekly off days. */
 export async function saveHours(formData: FormData) {
+  await requireAdmin();
   const clear = formData.get("clear") === "1";
 
   if (clear) {
@@ -426,6 +450,7 @@ export async function saveHours(formData: FormData) {
  * people using a feature at all.
  */
 export async function saveOffer(formData: FormData) {
+  await requireAdmin();
   const offerText = text(formData, "text").slice(0, MAX_OFFER_TEXT);
   const note = text(formData, "note").slice(0, MAX_OFFER_NOTE);
   const tone = text(formData, "tone");
@@ -454,10 +479,109 @@ export async function saveOffer(formData: FormData) {
 
 /** Removes the offer entirely, text and all. */
 export async function removeOffer() {
+  await requireAdmin();
   await prisma.setting.deleteMany({
     where: { key: { in: [OFFER_KEYS.text, OFFER_KEYS.note, OFFER_KEYS.tone, OFFER_KEYS.isVisible] } },
   });
 
   revalidatePath("/admin/offers");
   redirect("/admin/offers?saved=1");
+}
+
+// ------------------------------------------------------------------ ordering
+
+/**
+ * Saves the WhatsApp ordering switches. Refuses a setup that would switch
+ * ordering on but leave customers unable to order — no way to order, or no
+ * number for the orders to go to — rather than saving it and showing a menu
+ * whose Order button goes nowhere.
+ */
+export async function saveOrdering(formData: FormData) {
+  await requireAdmin();
+  function fail(message: string): never {
+    redirect(`/admin/ordering?error=${encodeURIComponent(message)}`);
+  }
+
+  const enabled = checked(formData, "enabled");
+  const modes = Object.fromEntries(ORDER_MODES.map((mode) => [mode, checked(formData, mode)]));
+  const tables = Number(text(formData, "tables"));
+  const tablesValid = Number.isInteger(tables) && tables >= 1 && tables <= MAX_TABLES;
+  const whatsapp = text(formData, "whatsapp");
+  const minOrder = Math.round(money(formData, "minOrder"));
+
+  if (modes.table && !tablesValid) fail(`Enter how many tables you have, from 1 to ${MAX_TABLES}.`);
+  if (whatsapp && !isWhatsappNumber(whatsapp)) {
+    fail("That WhatsApp number looks too short. Include the country code, like +91 98765 43210.");
+  }
+  if (enabled && !ORDER_MODES.some((mode) => modes[mode])) {
+    fail("Turn on at least one way to order, or switch ordering off.");
+  }
+  const fallback = process.env.SHOP_WHATSAPP || process.env.SHOP_PHONE || "";
+  if (enabled && !whatsapp && !isWhatsappNumber(fallback)) {
+    fail("Add the WhatsApp number orders should go to.");
+  }
+
+  const payments = PAYMENT_METHODS.filter((method) => checked(formData, `pay_${method}`));
+  const upiId = text(formData, "upiId");
+  if (upiId && !isUpiId(upiId)) fail("That UPI ID doesn't look right. It should be like shivambakery@okaxis.");
+
+  // The QR image: a new upload replaces the old one, or the owner removes it.
+  const previousQr =
+    (await prisma.setting.findUnique({ where: { key: ORDERING_KEYS.upiQr } }))?.value ?? "";
+  const uploaded = await saveImage(formData.get("upiQr") as File | null);
+  if (uploaded && "error" in uploaded) fail(uploaded.error);
+  let upiQr = uploaded && "url" in uploaded ? uploaded.url : previousQr;
+  if (!uploaded && checked(formData, "removeUpiQr")) upiQr = "";
+
+  if (enabled && payments.includes("upi") && !upiId && !upiQr) {
+    fail("Add your UPI ID or upload your UPI QR code, so customers who choose UPI can pay you.");
+  }
+  if (previousQr && previousQr !== upiQr) await deleteImage(previousQr);
+
+  const rows: [string, string][] = [
+    [ORDERING_KEYS.enabled, enabled ? "1" : "0"],
+    ...ORDER_MODES.map((mode): [string, string] => [ORDERING_KEYS[mode], modes[mode] ? "1" : "0"]),
+    [ORDERING_KEYS.whatsapp, whatsapp],
+    [ORDERING_KEYS.minOrder, String(minOrder)],
+    [ORDERING_KEYS.onlyWhenOpen, checked(formData, "onlyWhenOpen") ? "1" : "0"],
+    [ORDERING_KEYS.payments, payments.join(",")],
+    [ORDERING_KEYS.upiId, upiId],
+    [ORDERING_KEYS.upiQr, upiQr],
+  ];
+  // With table orders off the box may be empty; keep whatever was saved before.
+  if (tablesValid) rows.push([ORDERING_KEYS.tables, String(tables)]);
+
+  await prisma.$transaction(
+    rows.map(([key, value]) =>
+      prisma.setting.upsert({ where: { key }, create: { key, value }, update: { value } }),
+    ),
+  );
+
+  // The menu shows or hides its Order tab from these.
+  revalidatePath("/");
+  revalidatePath("/admin/ordering");
+  redirect("/admin/ordering?saved=1");
+}
+
+// --------------------------------------------------------------------- orders
+
+/** Moves an order along: preparing, ready, completed, cancelled, or back to new. */
+export async function setOrderStatus(formData: FormData) {
+  await requireAdmin();
+  const id = text(formData, "id");
+  const status = text(formData, "status");
+  if (!id || !isOrderStatus(status)) return;
+
+  await prisma.order.update({ where: { id }, data: { status } });
+  revalidatePath("/admin/orders");
+}
+
+/** Marks an order paid once the money is in — cash in the drawer, UPI in the bank app. */
+export async function setOrderPaid(formData: FormData) {
+  await requireAdmin();
+  const id = text(formData, "id");
+  if (!id) return;
+
+  await prisma.order.update({ where: { id }, data: { paid: formData.get("paid") === "1" } });
+  revalidatePath("/admin/orders");
 }

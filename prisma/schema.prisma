@@ -75,3 +75,50 @@ model Setting {
   value     String
   updatedAt DateTime @updatedAt
 }
+
+/// An order a customer sent from the menu. Saved before WhatsApp opens, so the
+/// dashboard has a record even though the conversation happens in WhatsApp.
+model Order {
+  id        String   @id @default(cuid())
+  /// The short reference both sides see: "#B7K2" in WhatsApp and the dashboard.
+  code      String   @unique
+  /// table | counter | pickup | delivery
+  mode      String
+  tableNo   Int?
+  name      String   @default("")
+  phone     String   @default("")
+  address   String   @default("")
+  /// Shared from the customer's phone for deliveries; null when they typed only.
+  latitude  Float?
+  longitude Float?
+  whenText  String   @default("")
+  note      String   @default("")
+  /// cash | upi | card, or "" when the shop does not ask.
+  payment   String   @default("")
+  paid      Boolean  @default(false)
+  /// new | preparing | ready | completed | cancelled
+  status    String   @default("new")
+  total     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lines OrderLine[]
+
+  @@index([createdAt])
+}
+
+/// One line of an order. Name and price are copied, not linked: an item renamed,
+/// repriced or deleted later must not rewrite what the customer ordered.
+model OrderLine {
+  id      String  @id @default(cuid())
+  orderId String
+  itemId  String
+  name    String
+  size    String?
+  price   Float
+  qty     Int
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+}

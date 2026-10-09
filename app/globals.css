@@ -202,6 +202,12 @@ body {
 }
 
 @layer components {
+  /* Inputs on the customer's order sheet. Follows the menu's light/dark
+     palette, unlike the admin's always-white .field; 16px text stops iOS
+     zooming the page when a field is tapped. */
+  .order-field {
+    @apply block w-full rounded-xl border border-[var(--line)] bg-[var(--bg)] px-3 py-2.5 text-base font-normal text-[var(--text)] outline-none placeholder:text-[var(--muted)] focus:border-[var(--accent)];
+  }
   .field {
     @apply w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-sm outline-none focus:border-[var(--accent)];
   }

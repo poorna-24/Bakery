@@ -3,6 +3,7 @@ import type { MenuCategory } from "@/lib/types";
 import { toAppearance } from "@/lib/backgrounds";
 import { shopNow, shopStatus, toShopHours } from "@/lib/hours";
 import { toOffer } from "@/lib/offer";
+import { orderingConfig, toOrderingSettings } from "@/lib/ordering";
 import Menu from "@/components/Menu";
 
 // The owner edits the menu in the admin app, which writes to the same database.
@@ -62,6 +63,12 @@ export default async function MenuPage() {
   const hours = toShopHours(settingRows);
   const hoursStatus = hours ? shopStatus(hours, shopNow()) : null;
 
+  // Null unless the owner has switched ordering on in the dashboard.
+  const ordering = orderingConfig(
+    toOrderingSettings(settingRows),
+    process.env.SHOP_WHATSAPP || process.env.SHOP_PHONE || "",
+  );
+
   return (
     <Menu
       categories={categories}
@@ -79,6 +86,7 @@ export default async function MenuPage() {
       hours={hours}
       hoursStatus={hoursStatus}
       offer={offer}
+      ordering={ordering}
     />
   );
 }
