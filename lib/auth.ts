@@ -11,7 +11,11 @@ import { createRateLimiter } from "./rateLimit";
 // ADMIN_PASSWORD_HASH instead (npm run hash-password) and drop the plain one.
 
 export const SESSION_COOKIE = "bakery_admin_session";
+// Twelve hours unless the owner ticks "keep me signed in" — meant for their own
+// phone, where the dashboard is installed as an app and signing in twice a day
+// would be a nuisance.
 const SESSION_HOURS = 12;
+export const REMEMBER_DAYS = 30;
 
 function secretKey(): Uint8Array {
   const secret = process.env.SESSION_SECRET;
@@ -48,11 +52,12 @@ export async function checkCredentials(email: string, password: string): Promise
   return emailOk && passwordOk;
 }
 
-export async function createSession(email: string): Promise<void> {
+export async function createSession(email: string, remember = false): Promise<void> {
+  const seconds = remember ? REMEMBER_DAYS * 24 * 60 * 60 : SESSION_HOURS * 60 * 60;
   const token = await new SignJWT({ email })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime(`${SESSION_HOURS}h`)
+    .setExpirationTime(`${seconds}s`)
     .sign(secretKey());
 
   const store = await cookies();
@@ -61,7 +66,7 @@ export async function createSession(email: string): Promise<void> {
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: SESSION_HOURS * 60 * 60,
+    maxAge: seconds,
   });
 }
 

@@ -251,3 +251,20 @@ describe("allowLoginAttempt", () => {
     expect(allowLoginAttempt(key, 1000 + 15 * 60 * 1000)).toBe(true);
   });
 });
+
+describe("keep me signed in", () => {
+  it("lasts thirty days when the owner asks, on the cookie and in the token", async () => {
+    await createSession("owner@bakery.com", true);
+    const cookie = store.get(SESSION_COOKIE)!;
+    expect(cookie.options?.maxAge).toBe(30 * 24 * 60 * 60);
+
+    const [, payload] = cookie.value.split(".");
+    const { iat, exp } = JSON.parse(Buffer.from(payload, "base64url").toString());
+    expect(exp - iat).toBe(30 * 24 * 60 * 60);
+  });
+
+  it("lasts twelve hours otherwise", async () => {
+    await createSession("owner@bakery.com");
+    expect(store.get(SESSION_COOKIE)!.options?.maxAge).toBe(12 * 60 * 60);
+  });
+});

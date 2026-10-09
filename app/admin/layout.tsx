@@ -1,4 +1,5 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { ADMIN_MANIFEST_PATH, ADMIN_THEME_COLOR } from "@/lib/appManifest";
 import Backdrop from "@/components/Backdrop";
 import { loadAppearance } from "@/lib/appearance";
 
@@ -11,7 +12,22 @@ export const metadata: Metadata = {
   title: `Admin — ${process.env.SHOP_NAME ?? "Bakery"}`,
   description: "Manage the bakery menu.",
   robots: { index: false, follow: false, nocache: true },
+  // Installable as an app: Chrome's "Install app" on Android, "Add to Home
+  // Screen" on an iPhone. See lib/appManifest.
+  manifest: ADMIN_MANIFEST_PATH,
+  icons: {
+    icon: [{ url: "/icons/admin-192.png", sizes: "192x192", type: "image/png" }],
+    apple: [{ url: "/icons/admin-apple-180.png", sizes: "180x180" }],
+  },
+  appleWebApp: {
+    capable: true,
+    title: `${process.env.SHOP_NAME ?? "Bakery"} Admin`,
+    statusBarStyle: "default",
+  },
 };
+
+// The app's top bar on a phone, in the shop's brown.
+export const viewport: Viewport = { themeColor: ADMIN_THEME_COLOR };
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const appearance = await loadAppearance();
