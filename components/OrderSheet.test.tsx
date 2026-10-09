@@ -51,6 +51,7 @@ function renderSheet(props: Partial<React.ComponentProps<typeof OrderSheet>> = {
     onChange: vi.fn(),
     onClose: vi.fn(),
     onDone: vi.fn(),
+    onAddMore: vi.fn(),
     submit: (props.submit ?? saved()) as ReturnType<typeof vi.fn>,
   };
   const result = render(
@@ -102,6 +103,15 @@ describe("reviewing the order", () => {
       ["bf", 1],
       ["ct::1 kg", -1],
     ]);
+  });
+
+  it("goes back to add more, keeping the order", async () => {
+    const user = userEvent.setup();
+    const { onAddMore, onChange } = renderSheet();
+
+    await user.click(screen.getByRole("button", { name: "+ Add more items" }));
+    expect(onAddMore).toHaveBeenCalledTimes(1);
+    expect(onChange).not.toHaveBeenCalled();
   });
 
   it("flags an order under the minimum before it is sent", () => {

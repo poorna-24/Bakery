@@ -309,7 +309,7 @@ export default function Menu({
                   type="button"
                   onClick={() => setTab(option)}
                   aria-pressed={tab === option}
-                  className={`flex items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-2 py-2.5 text-[13px] font-semibold transition-colors ${
+                  className={`relative flex items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-2 py-2.5 text-[13px] font-semibold transition-colors ${
                     tab === option
                       ? "bg-[var(--surface)] text-[var(--text)] shadow-sm ring-1 ring-[var(--accent)]"
                       : "text-[var(--muted)]"
@@ -323,6 +323,11 @@ export default function Menu({
                         <WhatsAppIcon />
                       </span>
                       Order on WhatsApp
+                      {count > 0 && (
+                        <span className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-[var(--accent)] px-1 text-[11px] font-bold text-white ring-2 ring-[var(--bg)]">
+                          {count}
+                        </span>
+                      )}
                     </>
                   )}
                 </button>
@@ -430,6 +435,7 @@ export default function Menu({
         phone={phone}
         whatsapp={whatsapp}
         credit={credit}
+        status={hours ? hoursStatus : null}
       />
 
       {selected && (
@@ -443,7 +449,13 @@ export default function Menu({
       )}
 
       {ordering && count > 0 && !reviewing && (
-        <CartBar count={count} total={cartTotal(cart)} onOpen={() => setReviewing(true)} />
+        <CartBar
+          count={count}
+          total={cartTotal(cart)}
+          onOpen={() => setReviewing(true)}
+          // A light reminder while browsing; the full bar while ordering.
+          quiet={!takingOrders}
+        />
       )}
 
       {ordering && reviewing && (
@@ -454,6 +466,11 @@ export default function Menu({
           hours={hours}
           onChange={(key, delta) => updateCart(changeQty(cart, key, delta))}
           onClose={closeReview}
+          onAddMore={() => {
+            // The review can be opened from the Menu tab too; adding happens on the order tab.
+            setReviewing(false);
+            setTab("order");
+          }}
           onDone={() => {
             updateCart([]);
             setReviewing(false);

@@ -1,4 +1,5 @@
 import { telHref, whatsappHref } from "@/lib/contact";
+import type { ShopStatus } from "@/lib/hours";
 
 type Props = {
   shopName: string;
@@ -7,10 +8,25 @@ type Props = {
   phone: string;
   whatsapp: string;
   credit: { name: string; whatsapp: string };
+  /** Open or closed right now, from Shop hours; null when no hours are set. */
+  status?: ShopStatus | null;
+};
+
+type Action = {
+  href: string;
+  /** The short word on the tile. */
+  label: string;
+  /** The whole action, for screen readers. */
+  name: string;
+  icon: React.ReactNode;
+  tone: string;
+  external: boolean;
 };
 
 /**
- * Sits at the bottom of the menu: where the shop is and how to reach it.
+ * Sits at the bottom of the menu: where the shop is and how to reach it, as
+ * one card with the ways to get in touch side by side — directions, WhatsApp,
+ * a call — rather than three full-width buttons stacked down the screen.
  *
  * No QR code here on purpose — this page is already being read on a phone, and
  * nobody can scan a QR with the screen showing it. These links open the map,
@@ -23,6 +39,7 @@ export default function Footer({
   phone,
   whatsapp,
   credit,
+  status = null,
 }: Props) {
   const tel = telHref(phone);
   const wa = whatsappHref(whatsapp || phone, `Hi ${shopName}, I saw your menu.`);
@@ -34,60 +51,86 @@ export default function Footer({
     `Hi ${credit.name}, I saw the ${shopName} menu page you built.`,
   );
 
+  // Only the ways in that are set up; the tiles share the row between them.
+  const actions: Action[] = [];
+  if (mapUrl) {
+    actions.push({
+      href: mapUrl,
+      label: "Directions",
+      name: "Get directions",
+      icon: <PinIcon />,
+      tone: "bg-[var(--accent)] text-white",
+      external: true,
+    });
+  }
+  if (wa) {
+    actions.push({
+      href: wa,
+      label: "WhatsApp",
+      name: "Message on WhatsApp",
+      icon: <WhatsAppIcon />,
+      tone: "bg-[#25D366] text-white",
+      external: true,
+    });
+  }
+  if (tel) {
+    actions.push({
+      href: tel,
+      label: "Call",
+      name: `Call ${phone}`,
+      icon: <PhoneIcon />,
+      tone: "border border-[var(--accent)] text-[var(--accent)]",
+      external: false,
+    });
+  }
+
   return (
-    <footer className="mt-14 border-t border-[var(--line)] px-5 pb-10 pt-8 text-center">
-      <p className="text-base font-extrabold uppercase tracking-tight text-[var(--accent)]">
-        {shopName}
-      </p>
+    <footer className="mt-14 px-4 pb-10 pt-2">
+      <div className="rounded-3xl border border-[var(--line)] bg-[var(--surface)] px-4 py-5 text-center shadow-sm">
+        <p className="text-base font-extrabold uppercase tracking-tight text-[var(--accent)]">{shopName}</p>
 
-      {address && (
-        <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-[var(--muted)]">
-          {address}
-        </p>
-      )}
-
-      <div className="mt-5 flex flex-col gap-2.5">
-        {mapUrl && (
-          <a
-            href={mapUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="flex w-full items-center justify-center gap-2 rounded-full bg-[var(--accent)] py-3.5 font-semibold text-white"
-          >
-            <PinIcon />
-            Get directions
-          </a>
+        {address && (
+          <p className="mx-auto mt-1 max-w-xs text-sm leading-relaxed text-[var(--muted)]">{address}</p>
         )}
 
-        {wa && (
-          <a
-            href={wa}
-            target="_blank"
-            rel="noreferrer"
-            className="flex w-full items-center justify-center gap-2 rounded-full bg-[#25D366] py-3.5 font-semibold text-white"
+        {status && (
+          <p
+            className={`mt-2.5 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${
+              status.isOpen ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-700"
+            }`}
           >
-            <WhatsAppIcon />
-            Message on WhatsApp
-          </a>
+            <span className={`h-1.5 w-1.5 rounded-full ${status.isOpen ? "bg-emerald-500" : "bg-red-500"}`} />
+            {status.label} · {status.detail}
+          </p>
         )}
 
-        {tel && (
-          <a
-            href={tel}
-            className="flex w-full items-center justify-center gap-2 rounded-full border border-[var(--accent)] py-3.5 font-semibold text-[var(--accent)]"
+        {actions.length > 0 && (
+          <div
+            className="mt-4 grid gap-2"
+            style={{ gridTemplateColumns: `repeat(${actions.length}, minmax(0, 1fr))` }}
           >
-            <PhoneIcon />
-            Call {phone}
-          </a>
+            {actions.map((action) => (
+              <a
+                key={action.label}
+                href={action.href}
+                aria-label={action.name}
+                {...(action.external ? { target: "_blank", rel: "noreferrer" } : {})}
+                className={`flex flex-col items-center justify-center gap-1.5 rounded-2xl px-1 py-3 text-xs font-semibold transition-opacity active:opacity-80 ${action.tone}`}
+              >
+                {action.icon}
+                {action.label}
+              </a>
+            ))}
+          </div>
         )}
       </div>
 
-      <p className="mt-7 text-xs text-[var(--muted)]">
+      <p className="mt-5 text-center text-xs text-[var(--muted)]">
         Prices are inclusive of taxes and may change without notice.
       </p>
 
       {credit.name && (
-        <p className="mx-auto mt-6 max-w-xs border-t border-[var(--line)] pt-5 text-[11px] leading-relaxed text-[var(--muted)]">
+        <p className="mx-auto mt-3 max-w-xs text-center text-[11px] leading-relaxed text-[var(--muted)]">
           Page created by{" "}
           {creditWa ? (
             <a

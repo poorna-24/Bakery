@@ -35,6 +35,8 @@ type Props = {
   onClose: () => void;
   /** The order went off to WhatsApp and the customer is done: empty the cart. */
   onDone: () => void;
+  /** Back to the menu's order list to add more, keeping everything chosen so far. */
+  onAddMore: () => void;
   /** Saves the order for the dashboard. Swappable so tests need no server. */
   submit?: (body: unknown) => Promise<PlaceOrderResult>;
 };
@@ -59,6 +61,7 @@ export default function OrderSheet({
   onChange,
   onClose,
   onDone,
+  onAddMore,
   submit = submitOrder,
 }: Props) {
   const [details, setDetails] = useState<OrderDetails>({
@@ -305,6 +308,14 @@ export default function OrderSheet({
                 <span>{formatPrice(total)}</span>
               </li>
             </ul>
+
+            <button
+              type="button"
+              onClick={onAddMore}
+              className="-mt-2 w-full rounded-xl border border-dashed border-[var(--accent)] py-2.5 text-sm font-semibold text-[var(--accent)]"
+            >
+              + Add more items
+            </button>
 
             {short > 0 && (
               <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900">

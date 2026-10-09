@@ -110,6 +110,22 @@ describe("CartBar", () => {
     expect(onOpen).toHaveBeenCalled();
   });
 
+  it("has a quiet version for browsing that still opens the order", async () => {
+    const user = userEvent.setup();
+    const onOpen = vi.fn();
+    render(<CartBar count={2} total={160} onOpen={onOpen} quiet />);
+
+    expect(screen.getByRole("button")).toHaveTextContent("2 items · ₹160View order");
+    expect(screen.queryByText(/review order/i)).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /view order/i }));
+    expect(onOpen).toHaveBeenCalled();
+  });
+
+  it("counts one item in the quiet version too", () => {
+    render(<CartBar count={1} total={80} onOpen={() => {}} quiet />);
+    expect(screen.getByRole("button")).toHaveTextContent("1 item · ₹80");
+  });
+
   it("says item for just one", () => {
     render(<CartBar count={1} total={80} onOpen={() => {}} />);
     expect(screen.getByRole("button")).toHaveTextContent("1 item · ₹80");

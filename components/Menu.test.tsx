@@ -729,6 +729,24 @@ describe("ordering on WhatsApp", () => {
     expect(window.localStorage.getItem("bakery.cart")).toBeNull();
   });
 
+  it("takes the customer from the review back to the order list to add more", async () => {
+    const user = userEvent.setup();
+    renderMenu({ ordering });
+
+    await user.click(screen.getByRole("button", { name: /order on whatsapp/i }));
+    await user.click(screen.getByRole("button", { name: "Add Chicken Puff" }));
+    // Wander back to the browsing tab, then open the review from there.
+    await user.click(screen.getByRole("button", { name: "Menu" }));
+    await user.click(screen.getByRole("button", { name: /view order/i }));
+
+    await user.click(screen.getByRole("button", { name: "+ Add more items" }));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /order on whatsapp/i })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Add one more Chicken Puff" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /review order/i })).toHaveTextContent("1 item");
+  });
+
   it("brings back an order started earlier, minus what is sold out", async () => {
     window.localStorage.setItem(
       "bakery.cart",
@@ -740,7 +758,7 @@ describe("ordering on WhatsApp", () => {
     renderMenu({ ordering });
 
     // Today's price, and the sold-out cake gone.
-    expect(await screen.findByRole("button", { name: /review order/i })).toHaveTextContent("2 items · ₹80");
+    expect(await screen.findByRole("button", { name: /view order/i })).toHaveTextContent("2 items · ₹80");
   });
 
   it("ignores a remembered order while ordering is switched off", () => {
@@ -749,7 +767,29 @@ describe("ordering on WhatsApp", () => {
       JSON.stringify([{ key: "i3", itemId: "i3", name: "Chicken Puff", size: null, price: 40, qty: 2 }]),
     );
     renderMenu();
+    expect(screen.queryByRole("button", { name: /(review|view) order/i })).not.toBeInTheDocument();
+  });
+
+  it("keeps the order bar quiet while browsing and strong while ordering, counting on the tab", async () => {
+    const user = userEvent.setup();
+    renderMenu({ ordering });
+
+    const orderTab = () => screen.getByRole("button", { name: /order on whatsapp/i });
+    expect(orderTab()).not.toHaveTextContent(/\d/);
+
+    await user.click(orderTab());
+    await user.click(screen.getByRole("button", { name: "Add Chicken Puff" }));
+    await user.click(screen.getByRole("button", { name: "Add one more Chicken Puff" }));
+
+    // Ordering: the full bar, and the count on the tab.
+    expect(screen.getByRole("button", { name: /review order/i })).toHaveTextContent("2 items · ₹80");
+    expect(orderTab()).toHaveTextContent("Order on WhatsApp2");
+
+    // Browsing: a light pill that still opens the order.
+    await user.click(screen.getByRole("button", { name: "Menu" }));
     expect(screen.queryByRole("button", { name: /review order/i })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /view order/i }));
+    expect(screen.getByRole("dialog", { name: "Your order" })).toBeInTheDocument();
   });
 
   it("warns on the order tab while the shop is closed", async () => {
