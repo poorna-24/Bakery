@@ -11,7 +11,7 @@ import userEvent from "@testing-library/user-event";
 
 const { auth, nav } = vi.hoisted(() => ({
   auth: { destroySession: vi.fn() },
-  nav: { redirect: vi.fn() },
+  nav: { redirect: vi.fn(), usePathname: vi.fn(() => "/admin/orders") },
 }));
 vi.mock("@/lib/auth", () => auth);
 vi.mock("next/navigation", () => nav);

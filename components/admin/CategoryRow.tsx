@@ -120,7 +120,9 @@ export default function CategoryRow({
   }
 
   return (
-    <div className="flex items-center gap-3 p-4">
+    // On a phone the buttons take a line of their own, so the name keeps the
+    // full width instead of breaking one word per line beside them.
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 p-4">
       <div className="flex flex-col">
         <MoveButton id={category.id} direction="up" disabled={isFirst} />
         <MoveButton id={category.id} direction="down" disabled={isLast} />
@@ -141,23 +143,25 @@ export default function CategoryRow({
         </p>
       </div>
 
-      <form action={toggleCategoryVisible}>
-        <input type="hidden" name="id" value={category.id} />
-        <button
-          type="submit"
-          className="btn-ghost"
-          title={category.isVisible ? "Hide from customers" : "Show to customers"}
-        >
-          {category.isVisible ? "Hide" : "Show"}
-        </button>
-      </form>
+      <div className="flex w-full items-center justify-end gap-2 sm:w-auto">
+        <form action={toggleCategoryVisible}>
+          <input type="hidden" name="id" value={category.id} />
+          <button
+            type="submit"
+            className="btn-ghost"
+            title={category.isVisible ? "Hide from customers" : "Show to customers"}
+          >
+            {category.isVisible ? "Hide" : "Show"}
+          </button>
+        </form>
 
-      <button type="button" onClick={() => setMode("edit")} className="btn-ghost">
-        Rename
-      </button>
-      <button type="button" onClick={() => setMode("delete")} className="btn-danger">
-        Delete
-      </button>
+        <button type="button" onClick={() => setMode("edit")} className="btn-ghost">
+          Rename
+        </button>
+        <button type="button" onClick={() => setMode("delete")} className="btn-danger">
+          Delete
+        </button>
+      </div>
     </div>
   );
 }

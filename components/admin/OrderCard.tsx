@@ -32,7 +32,7 @@ function StatusButton({ id, status, label, primary }: { id: string; status: Orde
     <form action={setOrderStatus}>
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="status" value={status} />
-      <button type="submit" className={primary ? "btn-primary px-3 py-1.5" : "btn-ghost px-3 py-1.5"}>
+      <button type="submit" className={`${primary ? "btn-primary" : "btn-ghost"} w-full px-2 py-1.5 text-xs sm:w-auto sm:px-3 sm:text-sm`}>
         {label}
       </button>
     </form>
@@ -133,7 +133,7 @@ export default function OrderCard({
           </form>
         </div>
 
-        <div className="flex flex-wrap gap-1.5">
+        <div className={isOpen(status) ? "grid w-full grid-cols-4 gap-1.5 sm:flex sm:w-auto" : "flex gap-1.5"}>
           {isOpen(status) ? (
             <>
               {OPEN_ACTIONS.filter((action) => action.status !== status).map((action) => (

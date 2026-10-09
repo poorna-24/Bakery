@@ -85,7 +85,7 @@ export default function Footer({
   }
 
   return (
-    <footer className="mt-14 px-4 pb-10 pt-2">
+    <footer className="mx-auto mt-14 max-w-xl px-4 pb-10 pt-2">
       <div className="rounded-3xl border border-[var(--line)] bg-[var(--surface)] px-4 py-5 text-center shadow-sm">
         <p className="text-base font-extrabold uppercase tracking-tight text-[var(--accent)]">{shopName}</p>
 

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { destroySession } from "@/lib/auth";
+import AdminNav from "./AdminNav";
 
 async function signOut() {
   "use server";
@@ -21,42 +22,27 @@ export default function Shell({
 }) {
   return (
     <div className="min-h-dvh">
-      <header className="border-b border-[var(--line)] bg-[var(--surface)]">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
-          <Link href="/admin" className="font-extrabold uppercase tracking-tight text-[var(--accent)]">
-            {process.env.SHOP_NAME ?? "Bakery"} Admin
-          </Link>
-          <nav className="ml-auto flex flex-wrap items-center gap-1 text-sm">
-            <Link href="/admin" className="rounded-lg px-3 py-1.5 hover:bg-[var(--bg)]">
-              Menu
-            </Link>
-            <Link href="/admin/orders" className="rounded-lg px-3 py-1.5 hover:bg-[var(--bg)]">
-              Orders
-            </Link>
-            <Link href="/admin/offers" className="rounded-lg px-3 py-1.5 hover:bg-[var(--bg)]">
-              Offers
-            </Link>
-            <Link href="/admin/hours" className="rounded-lg px-3 py-1.5 hover:bg-[var(--bg)]">
-              Hours
-            </Link>
-            <Link href="/admin/ordering" className="rounded-lg px-3 py-1.5 hover:bg-[var(--bg)]">
-              Ordering
-            </Link>
-            <Link href="/admin/appearance" className="rounded-lg px-3 py-1.5 hover:bg-[var(--bg)]">
-              Appearance
-            </Link>
-            <Link href="/admin/preview" className="rounded-lg px-3 py-1.5 hover:bg-[var(--bg)]">
-              Preview
-            </Link>
-            <Link href="/admin/qr" className="rounded-lg px-3 py-1.5 hover:bg-[var(--bg)]">
-              QR code
+      {/* Two rows: the shop and sign-out, then the sections. The sections row
+          scrolls sideways on a phone instead of wrapping onto three lines. */}
+      <header className="sticky top-0 z-30 border-b border-[var(--line)] bg-[var(--surface)]">
+        <div className="mx-auto max-w-5xl px-4">
+          <div className="flex items-center justify-between gap-3 py-3">
+            <Link
+              href="/admin"
+              className="truncate font-extrabold uppercase tracking-tight text-[var(--accent)]"
+            >
+              {process.env.SHOP_NAME ?? "Bakery"} Admin
             </Link>
             <form action={signOut}>
-              <button type="submit" className="rounded-lg px-3 py-1.5 hover:bg-[var(--bg)]">
+              <button
+                type="submit"
+                className="shrink-0 rounded-lg border border-[var(--line)] px-3 py-1.5 text-sm hover:bg-[var(--bg)]"
+              >
                 Sign out
               </button>
             </form>
-          </nav>
+          </div>
+          <AdminNav />
         </div>
       </header>
 

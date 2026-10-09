@@ -27,7 +27,7 @@ export default async function LoginPage({
       redirect(`/admin/login?error=1${back}`);
     }
 
-    await createSession(email);
+    await createSession(email, formData.get("remember") === "on");
     redirect(target);
   }
 
@@ -73,7 +73,12 @@ export default async function LoginPage({
           />
         </div>
 
-        <button type="submit" className="btn-primary mt-6 w-full">Sign in</button>
+        <label className="mt-4 flex cursor-pointer items-center gap-2 text-sm">
+          <input type="checkbox" name="remember" className="h-4 w-4 accent-[var(--accent)]" />
+          Keep me signed in on this phone for 30 days
+        </label>
+
+        <button type="submit" className="btn-primary mt-5 w-full">Sign in</button>
       </form>
     </main>
   );

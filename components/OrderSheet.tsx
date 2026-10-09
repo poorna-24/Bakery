@@ -153,8 +153,13 @@ export default function OrderSheet({
         lines: cart.map((line) => ({ itemId: line.itemId, size: line.size, qty: line.qty })),
         details,
       });
-      if (result.ok) finish(result.code, result.cart, result.total, true);
-      else setProblem(result.error);
+      if (result.ok) {
+        finish(result.code, result.cart, result.total, true);
+      } else {
+        setProblem(result.error);
+        // The order itself was fine; only saving it failed. Let it go on WhatsApp.
+        if (result.fallback) setUnreachable(true);
+      }
     } catch {
       setProblem("Couldn't reach the shop. Check your connection and try again.");
       setUnreachable(true);
@@ -167,7 +172,7 @@ export default function OrderSheet({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center"
+      className="fixed inset-0 z-50 flex items-end justify-center md:items-center md:p-6"
       role="dialog"
       aria-modal="true"
       aria-label="Your order"
@@ -179,7 +184,7 @@ export default function OrderSheet({
         className="absolute inset-0 animate-fadeIn bg-black/50"
       />
 
-      <div className="relative max-h-[92dvh] w-full max-w-screen-sm animate-sheetUp overflow-y-auto rounded-t-3xl bg-[var(--surface)] pb-[env(safe-area-inset-bottom)]">
+      <div className="relative max-h-[92dvh] w-full max-w-screen-sm animate-sheetUp overflow-y-auto rounded-t-3xl md:max-h-[85dvh] md:max-w-lg md:rounded-3xl md:shadow-2xl bg-[var(--surface)] pb-[env(safe-area-inset-bottom)]">
         <div className="sticky top-0 z-10 flex justify-center bg-[var(--surface)] pb-1 pt-3">
           <span className="h-1.5 w-11 rounded-full bg-[var(--line)]" />
         </div>
