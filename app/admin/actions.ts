@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { requireAdmin } from "@/lib/auth";
 import { slugify } from "@/lib/types";
 import { deleteImage, saveImage, saveImageFromUrl } from "@/lib/saveImage";
 import { SETTING_KEYS, isBackgroundId } from "@/lib/backgrounds";
@@ -18,8 +19,9 @@ import {
 } from "@/lib/ordering";
 import { isOrderStatus } from "@/lib/orders";
 
-// Every mutation the owner can perform. Middleware has already rejected
-// anyone without a session before these run.
+// Every mutation the owner can perform. Each one checks the session itself
+// (requireAdmin): middleware guards /admin pages by URL, but a server action
+// is its own endpoint and can be called from any route.
 
 function text(formData: FormData, key: string): string {
   return String(formData.get(key) ?? "").trim();
@@ -50,6 +52,7 @@ async function uniqueSlug(name: string, exceptId?: string): Promise<string> {
 // ---------------------------------------------------------------- categories
 
 export async function createCategory(formData: FormData) {
+  await requireAdmin();
   const name = text(formData, "name");
   if (!name) return;
 
@@ -68,6 +71,7 @@ export async function createCategory(formData: FormData) {
 }
 
 export async function updateCategory(formData: FormData) {
+  await requireAdmin();
   const id = text(formData, "id");
   const name = text(formData, "name");
   if (!id || !name) return;
@@ -86,6 +90,7 @@ export async function updateCategory(formData: FormData) {
 }
 
 export async function toggleCategoryVisible(formData: FormData) {
+  await requireAdmin();
   const id = text(formData, "id");
   const category = await prisma.category.findUnique({ where: { id } });
   if (!category) return;
@@ -100,6 +105,7 @@ export async function toggleCategoryVisible(formData: FormData) {
 
 /** Swaps sortOrder with the neighbour above or below. */
 export async function moveCategory(formData: FormData) {
+  await requireAdmin();
   const id = text(formData, "id");
   const direction = text(formData, "direction");
 
@@ -119,6 +125,7 @@ export async function moveCategory(formData: FormData) {
 }
 
 export async function deleteCategory(formData: FormData) {
+  await requireAdmin();
   const id = text(formData, "id");
   const moveTo = text(formData, "moveTo");
 
@@ -166,6 +173,7 @@ function readVariants(formData: FormData) {
 }
 
 export async function createItem(formData: FormData) {
+  await requireAdmin();
   const categoryId = text(formData, "categoryId");
   const name = text(formData, "name");
   if (!categoryId || !name) return;
@@ -203,6 +211,7 @@ export async function createItem(formData: FormData) {
 }
 
 export async function updateItem(formData: FormData) {
+  await requireAdmin();
   const id = text(formData, "id");
   const categoryId = text(formData, "categoryId");
   const name = text(formData, "name");
@@ -251,6 +260,7 @@ export async function updateItem(formData: FormData) {
 }
 
 export async function toggleItemAvailable(formData: FormData) {
+  await requireAdmin();
   const id = text(formData, "id");
   const item = await prisma.item.findUnique({ where: { id } });
   if (!item) return;
@@ -262,6 +272,7 @@ export async function toggleItemAvailable(formData: FormData) {
 }
 
 export async function moveItem(formData: FormData) {
+  await requireAdmin();
   const id = text(formData, "id");
   const direction = text(formData, "direction");
 
@@ -287,6 +298,7 @@ export async function moveItem(formData: FormData) {
 }
 
 export async function deleteItem(formData: FormData) {
+  await requireAdmin();
   const id = text(formData, "id");
 
   const item = await prisma.item.findUnique({ where: { id } });
@@ -308,6 +320,7 @@ export async function deleteItem(formData: FormData) {
  * abandoned backgrounds.
  */
 export async function saveAppearance(formData: FormData) {
+  await requireAdmin();
   const chosen = text(formData, "backgroundId");
   if (!isBackgroundId(chosen)) return;
 
@@ -350,6 +363,7 @@ export async function saveAppearance(formData: FormData) {
 
 /** Removes the uploaded photo and falls back to the plain background. */
 export async function removeBackgroundImage() {
+  await requireAdmin();
   const previousUrl =
     (await prisma.setting.findUnique({ where: { key: SETTING_KEYS.backgroundImageUrl } }))?.value ??
     null;
@@ -381,6 +395,7 @@ export async function removeBackgroundImage() {
 
 /** Saves opening hours and any weekly off days. */
 export async function saveHours(formData: FormData) {
+  await requireAdmin();
   const clear = formData.get("clear") === "1";
 
   if (clear) {
@@ -435,6 +450,7 @@ export async function saveHours(formData: FormData) {
  * people using a feature at all.
  */
 export async function saveOffer(formData: FormData) {
+  await requireAdmin();
   const offerText = text(formData, "text").slice(0, MAX_OFFER_TEXT);
   const note = text(formData, "note").slice(0, MAX_OFFER_NOTE);
   const tone = text(formData, "tone");
@@ -463,6 +479,7 @@ export async function saveOffer(formData: FormData) {
 
 /** Removes the offer entirely, text and all. */
 export async function removeOffer() {
+  await requireAdmin();
   await prisma.setting.deleteMany({
     where: { key: { in: [OFFER_KEYS.text, OFFER_KEYS.note, OFFER_KEYS.tone, OFFER_KEYS.isVisible] } },
   });
@@ -480,6 +497,7 @@ export async function removeOffer() {
  * whose Order button goes nowhere.
  */
 export async function saveOrdering(formData: FormData) {
+  await requireAdmin();
   function fail(message: string): never {
     redirect(`/admin/ordering?error=${encodeURIComponent(message)}`);
   }
@@ -549,6 +567,7 @@ export async function saveOrdering(formData: FormData) {
 
 /** Moves an order along: preparing, ready, completed, cancelled, or back to new. */
 export async function setOrderStatus(formData: FormData) {
+  await requireAdmin();
   const id = text(formData, "id");
   const status = text(formData, "status");
   if (!id || !isOrderStatus(status)) return;
@@ -559,6 +578,7 @@ export async function setOrderStatus(formData: FormData) {
 
 /** Marks an order paid once the money is in — cash in the drawer, UPI in the bank app. */
 export async function setOrderPaid(formData: FormData) {
+  await requireAdmin();
   const id = text(formData, "id");
   if (!id) return;
 

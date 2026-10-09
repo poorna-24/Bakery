@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createRateLimiter } from "./rateLimit";
+import { clientKey, createRateLimiter } from "./rateLimit";
 
 describe("createRateLimiter", () => {
   it("allows up to the limit in the window, then refuses", () => {
@@ -35,5 +35,20 @@ describe("createRateLimiter", () => {
     const allow = createRateLimiter({ limit: 1, windowMs: 60_000 });
     expect(allow("a")).toBe(true);
     expect(allow("a")).toBe(false);
+  });
+});
+
+describe("clientKey", () => {
+  it("trusts the address the platform sets over what the client claims", () => {
+    expect(clientKey(new Headers({ "x-real-ip": " 203.0.113.7 ", "x-forwarded-for": "1.2.3.4" }))).toBe("203.0.113.7");
+  });
+
+  it("falls back to the first forwarded address", () => {
+    expect(clientKey(new Headers({ "x-forwarded-for": "198.51.100.2, 10.0.0.1" }))).toBe("198.51.100.2");
+  });
+
+  it("says unknown when there is nothing to go on", () => {
+    expect(clientKey(new Headers())).toBe("unknown");
+    expect(clientKey(new Headers({ "x-forwarded-for": " " }))).toBe("unknown");
   });
 });

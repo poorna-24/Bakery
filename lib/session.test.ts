@@ -23,11 +23,21 @@ vi.mock("next/headers", () => ({
   }),
 }));
 
+/** The real redirect() throws; so does this one, saying where it was sent. */
+vi.mock("next/navigation", () => ({
+  redirect: (to: string) => {
+    throw new Error(`redirect:${to}`);
+  },
+}));
+
 const {
   SESSION_COOKIE,
+  allowLoginAttempt,
   createSession,
   currentUser,
   destroySession,
+  requireAdmin,
+  safeNextPath,
   verifyToken,
 } = await import("./auth");
 
@@ -171,5 +181,73 @@ describe("when SESSION_SECRET is unusable", () => {
 
     delete process.env.SESSION_SECRET;
     expect(await verifyToken(token)).toBeNull();
+  });
+});
+
+describe("requireAdmin", () => {
+  const originalEmail = process.env.ADMIN_EMAIL;
+  beforeEach(() => {
+    process.env.ADMIN_EMAIL = "Owner@Bakery.com";
+  });
+  afterEach(() => {
+    if (originalEmail === undefined) delete process.env.ADMIN_EMAIL;
+    else process.env.ADMIN_EMAIL = originalEmail;
+  });
+
+  it("lets the signed-in owner through, whatever the email's case", async () => {
+    await createSession("owner@bakery.com");
+    await expect(requireAdmin()).resolves.toBe("owner@bakery.com");
+  });
+
+  it("sends anyone not signed in to the login page", async () => {
+    await expect(requireAdmin()).rejects.toThrow("redirect:/admin/login");
+  });
+
+  // Changing ADMIN_EMAIL is how the owner throws out every old session.
+  it("refuses a valid session that belongs to a previous owner", async () => {
+    await createSession("old-owner@bakery.com");
+    await expect(requireAdmin()).rejects.toThrow("redirect:/admin/login");
+  });
+
+  it("refuses everyone when no owner is configured", async () => {
+    await createSession("owner@bakery.com");
+    delete process.env.ADMIN_EMAIL;
+    await expect(requireAdmin()).rejects.toThrow("redirect:/admin/login");
+  });
+});
+
+describe("safeNextPath", () => {
+  it.each(["/admin", "/admin/orders", "/admin/orders?view=new&period=7d", "/admin#top"])(
+    "keeps the dashboard address %s",
+    (path) => {
+      expect(safeNextPath(path)).toBe(path);
+    },
+  );
+
+  it.each([
+    "//evil.example",
+    "//evil.example/admin",
+    "/admin//evil.example",
+    "/\evil.example",
+    "/admin\..\evil",
+    "https://evil.example/admin",
+    "/administrator",
+    "/",
+    "/menu",
+    "",
+    null,
+    undefined,
+  ])("sends %j to the dashboard home instead", (path) => {
+    expect(safeNextPath(path)).toBe("/admin");
+  });
+});
+
+describe("allowLoginAttempt", () => {
+  it("allows ten tries from one address, then makes it wait", () => {
+    const key = "203.0.113.7";
+    for (let i = 0; i < 10; i++) expect(allowLoginAttempt(key, 1000)).toBe(true);
+    expect(allowLoginAttempt(key, 1000)).toBe(false);
+    // Fifteen minutes on, it may try again.
+    expect(allowLoginAttempt(key, 1000 + 15 * 60 * 1000)).toBe(true);
   });
 });

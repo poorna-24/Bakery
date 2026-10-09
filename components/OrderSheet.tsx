@@ -131,7 +131,7 @@ export default function OrderSheet({
 
   /** Opens WhatsApp — straight away, unless the customer still has to pay by UPI. */
   function finish(code: string, orderCart: Cart, orderTotal: number, saved: boolean) {
-    const link = orderLink(config.whatsapp, orderMessage({ shopName, orderId: code, cart: orderCart, details }));
+    const link = orderLink(config.whatsapp, orderMessage({ orderId: code, cart: orderCart, details }));
     const payByUpi = details.payment === "upi" && upiReady;
     if (!payByUpi) window.open(link, "_blank", "noopener,noreferrer");
     setSent({ code, link, total: orderTotal, saved, payByUpi });

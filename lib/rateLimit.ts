@@ -27,3 +27,17 @@ export function createRateLimiter({ limit, windowMs }: { limit: number; windowMs
     return true;
   };
 }
+
+/**
+ * Who is asking, for rate limiting. x-real-ip first: Vercel sets it from the
+ * connection itself, where the first x-forwarded-for entry is whatever the
+ * client chose to send. Behind no proxy at all both are the client's word —
+ * the limit is a speed bump there, not a lock.
+ */
+export function clientKey(headers: Headers): string {
+  return (
+    headers.get("x-real-ip")?.trim() ||
+    headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    "unknown"
+  );
+}

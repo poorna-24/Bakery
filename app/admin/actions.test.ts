@@ -49,7 +49,11 @@ class Redirected extends Error {
   }
 }
 
+/** The session check every action starts with; signed in unless a test says otherwise. */
+const { auth } = vi.hoisted(() => ({ auth: { requireAdmin: vi.fn() } }));
+
 vi.mock("@/lib/db", () => ({ prisma }));
+vi.mock("@/lib/auth", () => auth);
 vi.mock("@/lib/saveImage", () => images);
 vi.mock("next/cache", () => ({ revalidatePath }));
 vi.mock("next/navigation", () => ({
@@ -87,6 +91,7 @@ function withFile(fields: Record<string, string | string[]>, bytes = 3): FormDat
 }
 
 beforeEach(() => {
+  auth.requireAdmin.mockResolvedValue("owner@bakery.com");
   // Sensible "nothing there yet" answers; each test overrides what it needs.
   prisma.category.findUnique.mockResolvedValue(null);
   prisma.category.findFirst.mockResolvedValue(null);
@@ -1202,5 +1207,54 @@ describe("setOrderPaid", () => {
   it("ignores a request with no order", async () => {
     await actions.setOrderPaid(form({ paid: "1" }));
     expect(prisma.order.update).not.toHaveBeenCalled();
+  });
+});
+
+// ------------------------------------------------------------------- security
+
+describe("every action needs the signed-in owner", () => {
+  // Server actions are endpoints of their own, callable from any route, so the
+  // /admin middleware alone does not protect them. Each must check itself.
+  const everyAction = Object.entries(actions).filter(([, value]) => typeof value === "function");
+
+  it("covers every action the dashboard exports", () => {
+    expect(everyAction.map(([name]) => name).sort()).toEqual(
+      [
+        "createCategory",
+        "createItem",
+        "deleteCategory",
+        "deleteItem",
+        "moveCategory",
+        "moveItem",
+        "removeBackgroundImage",
+        "removeOffer",
+        "saveAppearance",
+        "saveHours",
+        "saveOffer",
+        "saveOrdering",
+        "setOrderPaid",
+        "setOrderStatus",
+        "toggleCategoryVisible",
+        "toggleItemAvailable",
+        "updateCategory",
+        "updateItem",
+      ].sort(),
+    );
+  });
+
+  it.each(everyAction)("%s refuses a visitor who is not signed in, touching nothing", async (_, action) => {
+    auth.requireAdmin.mockImplementation(async () => {
+      throw new Redirected("/admin/login");
+    });
+    const busy = form({ id: "x", name: "Hacked", status: "cancelled", paid: "1", enabled: "on" });
+
+    const to = await redirectTo(() => (action as (data: FormData) => Promise<unknown>)(busy));
+
+    expect(to).toBe("/admin/login");
+    for (const table of [prisma.category, prisma.item, prisma.setting, prisma.order]) {
+      for (const method of Object.values(table)) expect(method).not.toHaveBeenCalled();
+    }
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+    expect(images.deleteImage).not.toHaveBeenCalled();
   });
 });

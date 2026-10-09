@@ -157,11 +157,10 @@ describe("where the customer is", () => {
     await waitFor(() => expect(opened).toHaveLength(1));
     expect(opened[0]).toMatch(/^https:\/\/wa\.me\/917666093143\?text=/);
     const message = sentMessage();
-    expect(message).toMatch(/^Hello Shivam Bakery! New order #Q9ZX — TABLE 3/);
-    expect(message).toContain("• 1 × Choco Truffle Cake (1 kg) — ₹650");
-    expect(message).toContain("Total: ₹810");
-    expect(message).toContain("Name: Anu");
-    expect(message).toContain("Note: Less sugar");
+    expect(message).toMatch(/^\*New order #Q9ZX\* — Table 3\nAnu\n/);
+    expect(message).toContain("1 × Choco Truffle Cake (1 kg) — ₹650");
+    expect(message).toContain("*Total ₹810*");
+    expect(message).toContain("_Note: Less sugar_");
     expect(screen.getByRole("heading", { name: "Order #Q9ZX" })).toBeInTheDocument();
   });
 
@@ -182,8 +181,7 @@ describe("where the customer is", () => {
     await user.type(screen.getByLabelText("Phone number"), "98765 43210");
     await send(user);
     await waitFor(() => expect(opened).toHaveLength(1));
-    expect(sentMessage()).toMatch(/— COUNTER — Ravi/);
-    expect(sentMessage()).toContain("Phone: 98765 43210");
+    expect(sentMessage()).toMatch(/— Counter\nRavi · 98765 43210\n/);
   });
 
   it("asks for a phone number and a time for a pickup", async () => {
@@ -199,7 +197,7 @@ describe("where the customer is", () => {
     await send(user);
 
     await waitFor(() => expect(opened).toHaveLength(1));
-    expect(sentMessage()).toContain("Phone: 98765 43210\nWhen: In 1 hour");
+    expect(sentMessage()).toContain("Ravi · 98765 43210 · In 1 hour");
   });
 
   it("skips the question when the shop takes orders only one way", () => {
@@ -237,8 +235,8 @@ describe("delivery", () => {
 
     await send(user);
     await waitFor(() => expect(opened).toHaveLength(1));
-    expect(sentMessage()).toContain("Address: 12 MG Road");
-    expect(sentMessage()).toContain("Location: https://www.google.com/maps?q=17.385000,78.486700");
+    expect(sentMessage()).toContain("📍 12 MG Road");
+    expect(sentMessage()).toContain("\nhttps://www.google.com/maps?q=17.385000,78.486700");
   });
 
   it("lets the customer take a shared location back", async () => {
@@ -317,7 +315,7 @@ describe("paying", () => {
     await send(user);
 
     await waitFor(() => expect(opened).toHaveLength(1));
-    expect(sentMessage()).toContain("Payment: Card");
+    expect(sentMessage()).toContain("*Total ₹810* · Card");
   });
 
   it("has a UPI payer pay first, then send — with a pay button and the shop's QR", async () => {
@@ -385,7 +383,7 @@ describe("when saving the order goes wrong", () => {
 
     await user.click(screen.getByRole("button", { name: /send it on whatsapp anyway/i }));
     expect(opened).toHaveLength(1);
-    expect(sentMessage()).toMatch(/New order #[A-Z2-9]{4} — TABLE 3/);
+    expect(sentMessage()).toMatch(/^\*New order #[A-Z2-9]{4}\* — Table 3/);
     expect(screen.getByText(/without reaching the shop's list/i)).toBeInTheDocument();
   });
 

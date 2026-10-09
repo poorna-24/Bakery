@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers";
 import { placeOrder, type PlaceOrderResult } from "@/lib/placeOrder";
+import { clientKey } from "@/lib/rateLimit";
 
 /**
  * The menu's "Send order" button. A server action rather than a public API
@@ -9,7 +10,5 @@ import { placeOrder, type PlaceOrderResult } from "@/lib/placeOrder";
  * site cannot post orders into the dashboard. The work is in lib/placeOrder.
  */
 export async function submitOrder(body: unknown): Promise<PlaceOrderResult> {
-  const list = await headers();
-  const ip = list.get("x-forwarded-for")?.split(",")[0]?.trim() || list.get("x-real-ip") || "unknown";
-  return placeOrder(body, { ip });
+  return placeOrder(body, { ip: clientKey(await headers()) });
 }

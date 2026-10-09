@@ -414,53 +414,61 @@ export function newOrderId(random: () => number = Math.random): string {
   return Array.from({ length: 4 }, () => alphabet[Math.floor(random() * alphabet.length)]).join("");
 }
 
-function headline(details: OrderDetails): string {
-  const name = details.name.trim();
-  switch (details.mode) {
-    case "table":
-      return `TABLE ${Number(details.table)}`;
-    case "counter":
-      return `COUNTER — ${name}`;
-    case "pickup":
-      return `PICKUP — ${name}`;
-    case "delivery":
-      return `DELIVERY — ${name}`;
-  }
+const PLACE_NAMES: Record<Exclude<OrderMode, "table">, string> = {
+  counter: "Counter",
+  pickup: "Pickup",
+  delivery: "Delivery",
+};
+
+/** The payment as the shop reads it in the message: short, unlike the customer's dropdown. */
+function paymentInMessage(method: PaymentMethod, mode: OrderMode): string {
+  if (method === "upi") return "UPI";
+  return paymentLabel(method, mode);
 }
 
-/** The message the shop receives on WhatsApp. */
-export function orderMessage(order: {
-  shopName: string;
-  orderId: string;
-  cart: Cart;
-  details: OrderDetails;
-}): string {
-  const { shopName, orderId, cart, details } = order;
+/**
+ * The message the shop receives on WhatsApp. Clean and short, with bold only
+ * where the eye should land — the order and the total. WhatsApp turns *text*
+ * into bold and _text_ into italics; there is no colour to be had.
+ *
+ *   *New order #K4P7* — Delivery
+ *   Ravi · 98765 43210 · In 1 hour
+ *
+ *   2 × Black Forest Pastry — ₹160
+ *   1 × Choco Truffle Cake (1 kg) — ₹650
+ *   *Total ₹810* · UPI
+ *
+ *   📍 Flat 4B, Lakshmi Residency
+ *   https://www.google.com/maps?q=…
+ *   _Note: Write Happy Birthday Anu_
+ */
+export function orderMessage(order: { orderId: string; cart: Cart; details: OrderDetails }): string {
+  const { orderId, cart, details } = order;
+  const { mode } = details;
+
+  const place = mode === "table" ? `Table ${Number(details.table)}` : PLACE_NAMES[mode];
+  // Who, how to reach them, and when — whichever of these this kind of order has.
+  const who = [details.name.trim(), needsPhone(mode) ? details.phone.trim() : "", needsTime(mode) ? details.when : ""]
+    .filter(Boolean)
+    .join(" · ");
 
   const items = cart.map(
     (line) =>
-      `• ${line.qty} × ${line.name}${line.size ? ` (${line.size})` : ""} — ${formatPrice(
-        line.price * line.qty,
-      )}`,
+      `${line.qty} × ${line.name}${line.size ? ` (${line.size})` : ""} — ${formatPrice(line.price * line.qty)}`,
   );
+  const payment = isPaymentMethod(details.payment) ? ` · ${paymentInMessage(details.payment, mode)}` : "";
 
-  const extra: string[] = [];
-  if (details.mode === "table" && details.name.trim()) extra.push(`Name: ${details.name.trim()}`);
-  if (needsPhone(details.mode)) extra.push(`Phone: ${details.phone.trim()}`);
-  if (needsTime(details.mode)) extra.push(`When: ${details.when}`);
-  if (details.mode === "delivery") extra.push(`Address: ${details.address.trim()}`);
-  if (details.mode === "delivery" && details.location) extra.push(`Location: ${mapsLink(details.location)}`);
-  if (isPaymentMethod(details.payment)) extra.push(`Payment: ${paymentLabel(details.payment, details.mode)}`);
-  if (details.note.trim()) extra.push(`Note: ${details.note.trim()}`);
+  const lines = [`*New order #${orderId}* — ${place}`];
+  if (who) lines.push(who);
+  lines.push("", ...items, `*Total ${formatPrice(cartTotal(cart))}*${payment}`);
 
-  return [
-    `Hello ${shopName}! New order #${orderId} — ${headline(details)}`,
-    "",
-    ...items,
-    "",
-    `Total: ${formatPrice(cartTotal(cart))}`,
-    ...extra,
-  ].join("\n");
+  if (mode === "delivery") {
+    lines.push("", `📍 ${details.address.trim()}`);
+    if (details.location) lines.push(mapsLink(details.location));
+  }
+  if (details.note.trim()) lines.push(`_Note: ${details.note.trim()}_`);
+
+  return lines.join("\n");
 }
 
 /** The link that opens WhatsApp on the shop's chat with the order typed in. */

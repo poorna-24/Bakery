@@ -1,6 +1,8 @@
 import { cookies } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
+import { redirect } from "next/navigation";
+import { createRateLimiter } from "./rateLimit";
 
 // One owner account, credentials held in .env.local — there is no sign-up and
 // no user table, because only the shop owner ever logs in here.
@@ -82,3 +84,31 @@ export async function currentUser(): Promise<string | null> {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   return token ? verifyToken(token) : null;
 }
+
+/**
+ * The gate at the top of every admin server action. Middleware guards the
+ * /admin pages by URL, but a server action is an endpoint of its own that can
+ * be invoked from any route — so each one has to check the session itself.
+ * The token must also belong to today's owner: changing ADMIN_EMAIL signs
+ * every old session out.
+ */
+export async function requireAdmin(): Promise<string> {
+  const email = await currentUser();
+  const owner = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+  if (!email || !owner || email.trim().toLowerCase() !== owner) redirect("/admin/login");
+  return email;
+}
+
+/**
+ * Where to go after signing in. Only somewhere inside the dashboard: a value
+ * like "//evil.example" starts with a slash but is another site, and would
+ * turn the real login page into a springboard for a phishing page.
+ */
+export function safeNextPath(target: string | null | undefined): string {
+  if (!target || !/^\/admin(?:[/?#]|$)/.test(target)) return "/admin";
+  if (target.includes("//") || target.includes("\\")) return "/admin";
+  return target;
+}
+
+/** Ten sign-in attempts per address per fifteen minutes: plenty for a typo, too few to guess a password. */
+export const allowLoginAttempt = createRateLimiter({ limit: 10, windowMs: 15 * 60 * 1000 });

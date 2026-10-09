@@ -409,59 +409,49 @@ describe("newOrderId", () => {
 describe("orderMessage", () => {
   const cart = addToCart(addToCart(addToCart([], pastry), pastry), cake1kg);
 
-  it("leads with the table for a table order", () => {
+  it("reads cleanly for a table order: the order and total in bold, the note in italics", () => {
     expect(
-      orderMessage({ shopName: "Shivam Bakery", orderId: "B7K2", cart, details: { ...details, note: " Less sugar " } }),
+      orderMessage({ orderId: "B7K2", cart, details: { ...details, note: " Less sugar " } }),
     ).toBe(
       [
-        "Hello Shivam Bakery! New order #B7K2 — TABLE 3",
+        "*New order #B7K2* — Table 3",
         "",
-        "• 2 × Black Forest Pastry — ₹160",
-        "• 1 × Choco Truffle Cake (1 kg) — ₹650",
-        "",
-        "Total: ₹810",
-        "Note: Less sugar",
+        "2 × Black Forest Pastry — ₹160",
+        "1 × Choco Truffle Cake (1 kg) — ₹650",
+        "*Total ₹810*",
+        "_Note: Less sugar_",
       ].join("\n"),
     );
   });
 
-  it("adds the name to a table order when given", () => {
-    const text = orderMessage({ shopName: "S", orderId: "A", cart, details: { ...details, name: "Anu" } });
-    expect(text).toContain("Name: Anu");
+  it("puts a table customer's name under the heading when given", () => {
+    const text = orderMessage({ orderId: "A", cart, details: { ...details, name: " Anu " } });
+    expect(text.split("\n").slice(0, 2)).toEqual(["*New order #A* — Table 3", "Anu"]);
   });
 
-  it("names the customer at the counter", () => {
+  it("gives the name and number for the counter, but no time", () => {
     const text = orderMessage({
-      shopName: "S",
       orderId: "A",
       cart,
-      details: { ...details, mode: "counter", name: " Ravi ", phone: "98765 43210" },
+      details: { ...details, mode: "counter", name: " Ravi ", phone: " 98765 43210 " },
     });
-    expect(text.split("\n")[0]).toBe("Hello S! New order #A — COUNTER — Ravi");
-    expect(text).toContain("Phone: 98765 43210");
-    // An order for now: no time asked for.
-    expect(text).not.toContain("When:");
+    expect(text.split("\n").slice(0, 2)).toEqual(["*New order #A* — Counter", "Ravi · 98765 43210"]);
+    expect(text).not.toContain("As soon as possible");
   });
 
-  it("leaves the phone out of a table order", () => {
-    const text = orderMessage({ shopName: "S", orderId: "A", cart, details });
-    expect(text).not.toContain("Phone:");
-  });
-
-  it("says when for a pickup, and when and where for a delivery", () => {
-    const pickup = orderMessage({
-      shopName: "S",
+  it("adds when for a pickup", () => {
+    const text = orderMessage({
       orderId: "A",
       cart,
-      details: { ...details, mode: "pickup", name: "Ravi", phone: " 98765 43210 ", when: "In 1 hour" },
+      details: { ...details, mode: "pickup", name: "Ravi", phone: "98765 43210", when: "In 1 hour" },
     });
-    expect(pickup).toContain("PICKUP — Ravi");
-    expect(pickup).toContain("Phone: 98765 43210\nWhen: In 1 hour");
-    expect(pickup).not.toContain("Address:");
+    expect(text.split("\n").slice(0, 2)).toEqual(["*New order #A* — Pickup", "Ravi · 98765 43210 · In 1 hour"]);
+    expect(text).not.toContain("📍");
+  });
 
-    const delivery = orderMessage({
-      shopName: "S",
-      orderId: "A",
+  it("ends a delivery with the address and the map", () => {
+    const text = orderMessage({
+      orderId: "K4P7",
       cart,
       details: {
         ...details,
@@ -470,12 +460,35 @@ describe("orderMessage", () => {
         phone: "+91 98765 43210",
         when: "Tomorrow",
         address: " 12 MG Road ",
+        location: { lat: 17.385044, lng: 78.486671 },
+        payment: "upi",
+        note: "Ring twice",
       },
     });
-    expect(delivery).toContain("DELIVERY — Ravi");
-    expect(delivery).toContain("Phone: +91 98765 43210");
-    expect(delivery).toContain("When: Tomorrow");
-    expect(delivery).toContain("Address: 12 MG Road");
+    expect(text).toBe(
+      [
+        "*New order #K4P7* — Delivery",
+        "Ravi · +91 98765 43210 · Tomorrow",
+        "",
+        "2 × Black Forest Pastry — ₹160",
+        "1 × Choco Truffle Cake (1 kg) — ₹650",
+        "*Total ₹810* · UPI",
+        "",
+        "📍 12 MG Road",
+        "https://www.google.com/maps?q=17.385044,78.486671",
+        "_Note: Ring twice_",
+      ].join("\n"),
+    );
+  });
+
+  it("leaves the map link out when there is no shared location", () => {
+    const text = orderMessage({
+      orderId: "A",
+      cart,
+      details: { ...details, mode: "delivery", name: "Ravi", phone: "98765 43210", address: "12 MG Road" },
+    });
+    expect(text).toContain("📍 12 MG Road");
+    expect(text).not.toContain("google.com/maps");
   });
 });
 
@@ -526,28 +539,23 @@ describe("paying", () => {
     );
   });
 
-  it("puts the payment and the delivery location in the message", () => {
+  it.each([
+    ["cash", "table", "*Total ₹80* · Cash"],
+    ["cash", "delivery", "*Total ₹80* · Cash on delivery"],
+    ["upi", "table", "*Total ₹80* · UPI"],
+    ["card", "table", "*Total ₹80* · Card"],
+  ] as const)("shows %s payment for a %s order beside the total", (payment, mode, totalLine) => {
     const text = orderMessage({
-      shopName: "S",
       orderId: "A",
       cart: addToCart([], pastry),
-      details: {
-        ...details,
-        mode: "delivery",
-        name: "Ravi",
-        phone: "98765 43210",
-        address: "12 MG Road",
-        payment: "cash",
-        location: { lat: 17.385044, lng: 78.486671 },
-      },
+      details: { ...details, mode, name: "Ravi", phone: "98765 43210", address: "12 MG Road", payment },
     });
-    expect(text).toContain("Location: https://www.google.com/maps?q=17.385044,78.486671");
-    expect(text).toContain("Payment: Cash on delivery");
+    expect(text.split("\n")).toContain(totalLine);
   });
 
-  it("leaves payment out of the message when none was chosen", () => {
-    const text = orderMessage({ shopName: "S", orderId: "A", cart: addToCart([], pastry), details });
-    expect(text).not.toContain("Payment:");
+  it("shows the total alone when no payment was chosen", () => {
+    const text = orderMessage({ orderId: "A", cart: addToCart([], pastry), details });
+    expect(text.split("\n")).toContain("*Total ₹80*");
   });
 });
 
