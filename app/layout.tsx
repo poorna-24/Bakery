@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import EnvBanner from "@/components/EnvBanner";
+import { MENU_MANIFEST_PATH } from "@/lib/appManifest";
 import "./globals.css";
 
 const shopName = process.env.SHOP_NAME ?? "Our Bakery";
@@ -14,6 +15,14 @@ export const metadata: Metadata = {
   // Scanned from a table card, so it should look right if anyone shares the link.
   openGraph: { title: `Menu — ${shopName}`, description: tagline, type: "website" },
   robots: environmentLabel ? { index: false, follow: false } : { index: true, follow: true },
+  // Installable as an app (see lib/appManifest). The dashboard's own layout
+  // swaps in the admin app's manifest and icons for /admin.
+  manifest: MENU_MANIFEST_PATH,
+  icons: {
+    icon: [{ url: "/icons/menu-192.png", sizes: "192x192", type: "image/png" }],
+    apple: [{ url: "/icons/menu-apple-180.png", sizes: "180x180" }],
+  },
+  appleWebApp: { capable: true, title: shopName, statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {

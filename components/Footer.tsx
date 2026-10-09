@@ -1,4 +1,5 @@
 import { telHref, whatsappHref } from "@/lib/contact";
+import InstallAppButton from "./InstallAppButton";
 import type { ShopStatus } from "@/lib/hours";
 
 type Props = {
@@ -123,6 +124,8 @@ export default function Footer({
             ))}
           </div>
         )}
+
+        <InstallAppButton shopName={shopName} />
       </div>
 
       <p className="mt-5 text-center text-xs text-[var(--muted)]">
