@@ -17,7 +17,7 @@ import {
   isUpiId,
   isWhatsappNumber,
 } from "@/lib/ordering";
-import { isOrderStatus } from "@/lib/orders";
+import { cleanupCutoff, isCleanupAge, isOrderStatus } from "@/lib/orders";
 
 // Every mutation the owner can perform. Each one checks the session itself
 // (requireAdmin): middleware guards /admin pages by URL, but a server action
@@ -584,4 +584,21 @@ export async function setOrderPaid(formData: FormData) {
 
   await prisma.order.update({ where: { id }, data: { paid: formData.get("paid") === "1" } });
   revalidatePath("/admin/orders");
+}
+
+/**
+ * Clears out every order older than the chosen age (3 months to 2 years) and
+ * returns how many went. Their item lines go with them: the database deletes
+ * them along with the order.
+ */
+export async function deleteOldOrders(formData: FormData): Promise<number> {
+  await requireAdmin();
+  const age = text(formData, "age");
+  if (!isCleanupAge(age)) return 0;
+
+  const { count } = await prisma.order.deleteMany({
+    where: { createdAt: { lt: cleanupCutoff(age, new Date()) } },
+  });
+  revalidatePath("/admin/orders");
+  return count;
 }
