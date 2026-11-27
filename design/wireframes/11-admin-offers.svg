@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="960" viewBox="0 0 390 960" font-family="Arial, Helvetica, sans-serif">
+  <title>11 Admin · Offers and festivals</title>
+  <rect width="390" height="960" fill="#f7f4ef"/>
+
+  <g id="admin-header">
+    <rect width="390" height="104" fill="#ffffff" stroke="#e5dcd0"/>
+    <text x="16" y="34" font-size="14" font-weight="800" fill="#b4741f" letter-spacing="1.5">BAKERY NAME ADMIN</text>
+    <rect x="296" y="14" width="78" height="30" rx="8" fill="#ffffff" stroke="#e5dcd0"/>
+    <text x="335" y="34" font-size="12" fill="#2b1e14" text-anchor="middle">Sign out</text>
+    <g font-size="12">
+      <rect x="16" y="60" width="56" height="30" rx="15" fill="#ffffff" stroke="#e5dcd0"/><text x="44" y="79" fill="#2b1e14" text-anchor="middle">Menu</text>
+      <rect x="78" y="60" width="62" height="30" rx="15" fill="#ffffff" stroke="#e5dcd0"/><text x="109" y="79" fill="#2b1e14" text-anchor="middle">Orders</text>
+      <rect x="146" y="60" width="60" height="30" rx="15" fill="#b4741f"/><text x="176" y="79" fill="#ffffff" text-anchor="middle" font-weight="700">Offers</text>
+      <rect x="212" y="60" width="56" height="30" rx="15" fill="#ffffff" stroke="#e5dcd0"/><text x="240" y="79" fill="#2b1e14" text-anchor="middle">Hours</text>
+      <rect x="274" y="60" width="72" height="30" rx="15" fill="#ffffff" stroke="#e5dcd0"/><text x="310" y="79" fill="#2b1e14" text-anchor="middle">Ordering</text>
+      <rect x="352" y="60" width="90" height="30" rx="15" fill="#ffffff" stroke="#e5dcd0"/><text x="362" y="79" fill="#2b1e14">Appear…</text>
+    </g>
+  </g>
+
+  <text x="16" y="134" font-size="12" fill="#b4741f">← All categories</text>
+  <text x="16" y="168" font-size="26" font-weight="800" fill="#2b1e14">Offers &amp; festivals</text>
+
+  <rect x="16" y="184" width="358" height="38" rx="10" fill="#dcfce7"/>
+  <text x="28" y="208" font-size="12" fill="#15803d">Saved. Reload the customer menu to see it.</text>
+
+  <text x="16" y="250" font-size="11" font-weight="700" fill="#7a6a5b" letter-spacing="1">PREVIEW</text>
+  <rect x="16" y="258" width="358" height="50" rx="10" fill="#B3261E"/>
+  <text x="195" y="280" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">Diwali special — 20% off all sweets</text>
+  <text x="195" y="297" font-size="10" fill="#ffffff" text-anchor="middle">Till 5 November, on orders above ₹500</text>
+  <text x="16" y="324" font-size="11" fill="#7a6a5b">↑ sits above the shop name on the menu</text>
+
+  <rect x="16" y="340" width="358" height="470" rx="14" fill="#ffffff" stroke="#e5dcd0"/>
+  <g font-size="11" font-weight="700" fill="#7a6a5b" letter-spacing="1">
+    <text x="32" y="368">OFFER TEXT (ONE SHORT LINE)</text>
+    <text x="32" y="452">SECOND LINE (OPTIONAL)</text>
+    <text x="32" y="536">COLOUR</text>
+  </g>
+  <rect x="32" y="376" width="326" height="40" rx="10" fill="#ffffff" stroke="#e5dcd0"/>
+  <text x="44" y="401" font-size="13" fill="#2b1e14">Diwali special — 20% off all sweets</text>
+  <text x="32" y="432" font-size="10" fill="#7a6a5b">35/60 — keep it short so it fits one line on a phone.</text>
+  <rect x="32" y="460" width="326" height="40" rx="10" fill="#ffffff" stroke="#e5dcd0"/>
+  <text x="44" y="485" font-size="13" fill="#2b1e14">Till 5 November, on orders above ₹500</text>
+  <text x="32" y="516" font-size="10" fill="#7a6a5b">37/80 — dates or conditions.</text>
+
+  <g font-size="12" font-weight="700">
+    <rect x="32" y="546" width="157" height="56" rx="12" fill="#ffffff" stroke="#2b1e14" stroke-width="2"/>
+    <rect x="44" y="560" width="28" height="28" rx="6" fill="#B3261E"/><text x="82" y="579" fill="#2b1e14">Festive red</text>
+    <rect x="201" y="546" width="157" height="56" rx="12" fill="#ffffff" stroke="#e5dcd0"/>
+    <rect x="213" y="560" width="28" height="28" rx="6" fill="#B4741F"/><text x="251" y="579" fill="#2b1e14">Gold</text>
+    <rect x="32" y="610" width="157" height="56" rx="12" fill="#ffffff" stroke="#e5dcd0"/>
+    <rect x="44" y="624" width="28" height="28" rx="6" fill="#1B6E45"/><text x="82" y="643" fill="#2b1e14">Fresh green</text>
+    <rect x="201" y="610" width="157" height="56" rx="12" fill="#ffffff" stroke="#e5dcd0"/>
+    <rect x="213" y="624" width="28" height="28" rx="6" fill="#7A2E6B"/><text x="251" y="643" fill="#2b1e14">Berry</text>
+  </g>
+
+  <rect x="32" y="690" width="18" height="18" rx="4" fill="#b4741f"/>
+  <text x="60" y="704" font-size="13" font-weight="700" fill="#2b1e14">Show on the menu</text>
+  <text x="60" y="722" font-size="11" fill="#7a6a5b">Untick to hide it and keep the text for next time.</text>
+
+  <g font-size="13">
+    <rect x="16" y="830" width="110" height="42" rx="10" fill="#b4741f"/><text x="71" y="856" fill="#ffffff" font-weight="700" text-anchor="middle">Save offer</text>
+    <rect x="134" y="830" width="120" height="42" rx="10" fill="#ffffff" stroke="#fecaca"/><text x="194" y="856" fill="#b91c1c" text-anchor="middle">Remove offer</text>
+    <rect x="16" y="882" width="160" height="42" rx="10" fill="#ffffff" stroke="#e5dcd0"/><text x="96" y="908" fill="#2b1e14" text-anchor="middle">Preview on a phone</text>
+  </g>
+</svg>

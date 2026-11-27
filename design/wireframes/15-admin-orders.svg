@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="1420" viewBox="0 0 390 1420" font-family="Arial, Helvetica, sans-serif">
+  <title>15 Admin · Orders and analytics</title>
+  <rect width="390" height="1420" fill="#f7f4ef"/>
+
+  <g id="admin-header">
+    <rect width="390" height="104" fill="#ffffff" stroke="#e5dcd0"/>
+    <text x="16" y="34" font-size="14" font-weight="800" fill="#b4741f" letter-spacing="1.5">BAKERY NAME ADMIN</text>
+    <rect x="296" y="14" width="78" height="30" rx="8" fill="#ffffff" stroke="#e5dcd0"/>
+    <text x="335" y="34" font-size="12" fill="#2b1e14" text-anchor="middle">Sign out</text>
+    <g font-size="12">
+      <rect x="16" y="60" width="56" height="30" rx="15" fill="#ffffff" stroke="#e5dcd0"/><text x="44" y="79" fill="#2b1e14" text-anchor="middle">Menu</text>
+      <rect x="78" y="60" width="62" height="30" rx="15" fill="#b4741f"/><text x="109" y="79" fill="#ffffff" text-anchor="middle" font-weight="700">Orders</text>
+      <rect x="146" y="60" width="60" height="30" rx="15" fill="#ffffff" stroke="#e5dcd0"/><text x="176" y="79" fill="#2b1e14" text-anchor="middle">Offers</text>
+      <rect x="212" y="60" width="56" height="30" rx="15" fill="#ffffff" stroke="#e5dcd0"/><text x="240" y="79" fill="#2b1e14" text-anchor="middle">Hours</text>
+      <rect x="274" y="60" width="72" height="30" rx="15" fill="#ffffff" stroke="#e5dcd0"/><text x="310" y="79" fill="#2b1e14" text-anchor="middle">Ordering</text>
+      <rect x="352" y="60" width="90" height="30" rx="15" fill="#ffffff" stroke="#e5dcd0"/><text x="362" y="79" fill="#2b1e14">Appear…</text>
+    </g>
+  </g>
+
+  <text x="16" y="150" font-size="26" font-weight="800" fill="#2b1e14">Orders</text>
+  <text x="16" y="174" font-size="12" fill="#7a6a5b">Every order sent from the menu. This page refreshes itself.</text>
+
+  <!-- Period -->
+  <g font-size="12">
+    <rect x="16" y="188" width="62" height="30" rx="8" fill="#2b1e14"/><text x="47" y="208" fill="#ffffff" text-anchor="middle" font-weight="700">Today</text>
+    <rect x="84" y="188" width="96" height="30" rx="8" fill="#ffffff" stroke="#e5dcd0"/><text x="132" y="208" fill="#2b1e14" text-anchor="middle">Last 7 days</text>
+    <rect x="186" y="188" width="104" height="30" rx="8" fill="#ffffff" stroke="#e5dcd0"/><text x="238" y="208" fill="#2b1e14" text-anchor="middle">Last 30 days</text>
+  </g>
+
+  <!-- Stat tiles: 2 cols on phone, 5 on desktop -->
+  <g>
+    <rect x="16" y="232" width="173" height="66" rx="14" fill="#ffffff" stroke="#e5dcd0"/>
+    <text x="30" y="254" font-size="11" fill="#7a6a5b">Orders</text><text x="30" y="284" font-size="22" font-weight="800" fill="#2b1e14">24</text>
+    <rect x="201" y="232" width="173" height="66" rx="14" fill="#ffffff" stroke="#e5dcd0"/>
+    <text x="215" y="254" font-size="11" fill="#7a6a5b">Sales</text><text x="215" y="284" font-size="22" font-weight="800" fill="#2b1e14">₹9,840</text>
+    <rect x="16" y="308" width="173" height="66" rx="14" fill="#ffffff" stroke="#e5dcd0"/>
+    <text x="30" y="330" font-size="11" fill="#7a6a5b">Average order</text><text x="30" y="360" font-size="22" font-weight="800" fill="#2b1e14">₹410</text>
+    <rect x="201" y="308" width="173" height="66" rx="14" fill="#ffffff" stroke="#e5dcd0"/>
+    <text x="215" y="330" font-size="11" fill="#7a6a5b">Waiting now</text><text x="215" y="360" font-size="22" font-weight="800" fill="#2b1e14">3</text>
+    <rect x="16" y="384" width="358" height="66" rx="14" fill="#ffffff" stroke="#e5dcd0"/>
+    <text x="30" y="406" font-size="11" fill="#7a6a5b">Still to collect</text><text x="30" y="436" font-size="22" font-weight="800" fill="#2b1e14">₹1,230</text>
+  </g>
+
+  <!-- Analytics cards: 1 col phone, 3 on desktop -->
+  <rect x="16" y="462" width="358" height="128" rx="14" fill="#ffffff" stroke="#e5dcd0"/>
+  <text x="30" y="486" font-size="12" font-weight="700" fill="#2b1e14">Top items</text>
+  <g font-size="11" fill="#2b1e14">
+    <text x="30" y="510">Choco Truffle Cake</text><text x="360" y="510" text-anchor="end">9</text>
+    <rect x="30" y="516" width="330" height="6" rx="3" fill="#f3e3ce"/><rect x="30" y="516" width="290" height="6" rx="3" fill="#b4741f"/>
+    <text x="30" y="540">Black Forest Pastry</text><text x="360" y="540" text-anchor="end">7</text>
+    <rect x="30" y="546" width="330" height="6" rx="3" fill="#f3e3ce"/><rect x="30" y="546" width="225" height="6" rx="3" fill="#b4741f"/>
+    <text x="30" y="570">Veg Puff</text><text x="360" y="570" text-anchor="end">5</text>
+    <rect x="30" y="576" width="330" height="6" rx="3" fill="#f3e3ce"/><rect x="30" y="576" width="160" height="6" rx="3" fill="#b4741f"/>
+  </g>
+  <rect x="16" y="600" width="358" height="128" rx="14" fill="#ffffff" stroke="#e5dcd0"/>
+  <text x="30" y="624" font-size="12" font-weight="700" fill="#2b1e14">How customers ordered</text>
+  <g font-size="11" fill="#2b1e14">
+    <text x="30" y="648">At a table</text><text x="360" y="648" text-anchor="end">12 · 50%</text>
+    <rect x="30" y="654" width="330" height="6" rx="3" fill="#f3e3ce"/><rect x="30" y="654" width="165" height="6" rx="3" fill="#b4741f"/>
+    <text x="30" y="678">At the counter</text><text x="360" y="678" text-anchor="end">7 · 29%</text>
+    <rect x="30" y="684" width="330" height="6" rx="3" fill="#f3e3ce"/><rect x="30" y="684" width="96" height="6" rx="3" fill="#b4741f"/>
+    <text x="30" y="708">Pickup · Delivery</text><text x="360" y="708" text-anchor="end">5 · 21%</text>
+    <rect x="30" y="714" width="330" height="6" rx="3" fill="#f3e3ce"/><rect x="30" y="714" width="70" height="6" rx="3" fill="#b4741f"/>
+  </g>
+  <rect x="16" y="738" width="358" height="128" rx="14" fill="#ffffff" stroke="#e5dcd0"/>
+  <text x="30" y="762" font-size="12" font-weight="700" fill="#2b1e14">Busy hours</text>
+  <g fill="#b4741f">
+    <rect x="40" y="826" width="20" height="14"/><rect x="72" y="806" width="20" height="34"/><rect x="104" y="796" width="20" height="44"/>
+    <rect x="136" y="816" width="20" height="24"/><rect x="168" y="822" width="20" height="18"/><rect x="200" y="810" width="20" height="30"/>
+    <rect x="232" y="790" width="20" height="50"/><rect x="264" y="780" width="20" height="60"/><rect x="296" y="804" width="20" height="36"/><rect x="328" y="820" width="20" height="20"/>
+  </g>
+  <g font-size="9" fill="#7a6a5b" text-anchor="middle">
+    <text x="50" y="856">8a</text><text x="114" y="856">10a</text><text x="178" y="856">12p</text><text x="242" y="856">5p</text><text x="306" y="856">7p</text>
+  </g>
+
+  <!-- Status tabs -->
+  <g font-size="12">
+    <rect x="16" y="882" width="80" height="30" rx="15" fill="#b4741f"/><text x="56" y="902" fill="#ffffff" text-anchor="middle" font-weight="700">Active · 3</text>
+    <rect x="102" y="882" width="70" height="30" rx="15" fill="#ffffff" stroke="#e5dcd0"/><text x="137" y="902" fill="#7a6a5b" text-anchor="middle">New · 1</text>
+    <rect x="178" y="882" width="104" height="30" rx="15" fill="#ffffff" stroke="#e5dcd0"/><text x="230" y="902" fill="#7a6a5b" text-anchor="middle">Preparing · 1</text>
+    <rect x="288" y="882" width="82" height="30" rx="15" fill="#ffffff" stroke="#e5dcd0"/><text x="329" y="902" fill="#7a6a5b" text-anchor="middle">Ready · 1</text>
+  </g>
+
+  <!-- Order card -->
+  <g id="order-card">
+    <rect x="16" y="926" width="358" height="300" rx="14" fill="#ffffff" stroke="#e5dcd0"/>
+    <text x="30" y="954" font-size="15" font-weight="800" fill="#2b1e14">#B7K2</text>
+    <text x="90" y="954" font-size="13" fill="#2b1e14">Delivery · Ravi</text>
+    <rect x="200" y="940" width="44" height="20" rx="10" fill="#dbeafe"/><text x="222" y="954" font-size="10" font-weight="700" fill="#1d4ed8" text-anchor="middle">New</text>
+    <text x="360" y="954" font-size="11" fill="#7a6a5b" text-anchor="end">2:45 pm</text>
+    <text x="30" y="978" font-size="12" fill="#b4741f">98765 43210 · WhatsApp them · Wanted: ASAP</text>
+    <line x1="30" y1="990" x2="360" y2="990" stroke="#e5dcd0"/>
+    <g font-size="12" fill="#2b1e14">
+      <text x="30" y="1012">1 × Choco Truffle Cake (500 g)</text><text x="360" y="1012" text-anchor="end">₹450</text>
+      <text x="30" y="1034">2 × Butterscotch Pastry</text><text x="360" y="1034" text-anchor="end">₹140</text>
+    </g>
+    <rect x="30" y="1046" width="330" height="30" rx="8" fill="#fef9c3"/>
+    <text x="40" y="1066" font-size="11" fill="#2b1e14">Note: "Happy birthday" on the cake</text>
+    <text x="30" y="1098" font-size="11" fill="#7a6a5b">12, MG Road, near temple</text>
+    <rect x="260" y="1084" width="100" height="26" rx="8" fill="#ffffff" stroke="#e5dcd0"/><text x="310" y="1101" font-size="11" fill="#2b1e14" text-anchor="middle">Open in Maps</text>
+    <text x="30" y="1136" font-size="13" font-weight="800" fill="#2b1e14">Total ₹590 <tspan font-weight="400" fill="#7a6a5b">· UPI</tspan></text>
+    <rect x="200" y="1120" width="160" height="26" rx="13" fill="#eeeae4"/><text x="280" y="1137" font-size="11" fill="#2b1e14" text-anchor="middle">Unpaid — mark paid</text>
+    <g font-size="11">
+      <rect x="30" y="1160" width="76" height="34" rx="8" fill="#ffffff" stroke="#e5dcd0"/><text x="68" y="1181" fill="#2b1e14" text-anchor="middle">Preparing</text>
+      <rect x="112" y="1160" width="76" height="34" rx="8" fill="#ffffff" stroke="#e5dcd0"/><text x="150" y="1181" fill="#2b1e14" text-anchor="middle">Ready</text>
+      <rect x="194" y="1160" width="84" height="34" rx="8" fill="#b4741f"/><text x="236" y="1181" fill="#ffffff" text-anchor="middle" font-weight="700">Completed</text>
+      <rect x="284" y="1160" width="76" height="34" rx="8" fill="#ffffff" stroke="#fecaca"/><text x="322" y="1181" fill="#b91c1c" text-anchor="middle">Cancel</text>
+    </g>
+  </g>
+
+  <!-- Clean up old orders -->
+  <rect x="16" y="1250" width="358" height="150" rx="14" fill="#ffffff" stroke="#e5dcd0"/>
+  <text x="30" y="1276" font-size="13" font-weight="700" fill="#2b1e14">▾ Clean up old orders</text>
+  <text x="30" y="1296" font-size="11" fill="#7a6a5b">Optional. Deleting can't be undone.</text>
+  <text x="30" y="1320" font-size="10" font-weight="700" fill="#7a6a5b" letter-spacing="1">DELETE ORDERS OLDER THAN</text>
+  <rect x="30" y="1328" width="180" height="36" rx="10" fill="#ffffff" stroke="#e5dcd0"/><text x="42" y="1351" font-size="12" fill="#2b1e14">1 year (240 orders) ▾</text>
+  <rect x="218" y="1328" width="142" height="36" rx="8" fill="#ffffff" stroke="#fecaca"/><text x="289" y="1351" font-size="12" fill="#b91c1c" text-anchor="middle">Delete 240 orders</text>
+  <text x="30" y="1388" font-size="10" fill="#7a6a5b">Then: "Yes, delete 240 orders" / "No"</text>
+</svg>

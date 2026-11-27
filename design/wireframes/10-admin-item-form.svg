@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="1280" viewBox="0 0 390 1280" font-family="Arial, Helvetica, sans-serif">
+  <title>10 Admin · New / edit item</title>
+  <rect width="390" height="1280" fill="#f7f4ef"/>
+
+  <g id="admin-header">
+    <rect width="390" height="104" fill="#ffffff" stroke="#e5dcd0"/>
+    <text x="16" y="34" font-size="14" font-weight="800" fill="#b4741f" letter-spacing="1.5">BAKERY NAME ADMIN</text>
+    <rect x="296" y="14" width="78" height="30" rx="8" fill="#ffffff" stroke="#e5dcd0"/>
+    <text x="335" y="34" font-size="12" fill="#2b1e14" text-anchor="middle">Sign out</text>
+    <g font-size="12">
+      <rect x="16" y="60" width="56" height="30" rx="15" fill="#b4741f"/><text x="44" y="79" fill="#ffffff" text-anchor="middle" font-weight="700">Menu</text>
+      <rect x="78" y="60" width="62" height="30" rx="15" fill="#ffffff" stroke="#e5dcd0"/><text x="109" y="79" fill="#2b1e14" text-anchor="middle">Orders</text>
+      <rect x="146" y="60" width="60" height="30" rx="15" fill="#ffffff" stroke="#e5dcd0"/><text x="176" y="79" fill="#2b1e14" text-anchor="middle">Offers</text>
+      <rect x="212" y="60" width="56" height="30" rx="15" fill="#ffffff" stroke="#e5dcd0"/><text x="240" y="79" fill="#2b1e14" text-anchor="middle">Hours</text>
+      <rect x="274" y="60" width="72" height="30" rx="15" fill="#ffffff" stroke="#e5dcd0"/><text x="310" y="79" fill="#2b1e14" text-anchor="middle">Ordering</text>
+      <rect x="352" y="60" width="90" height="30" rx="15" fill="#ffffff" stroke="#e5dcd0"/><text x="362" y="79" fill="#2b1e14">Appear…</text>
+    </g>
+  </g>
+
+  <text x="16" y="134" font-size="12" fill="#b4741f">← Cakes</text>
+  <text x="16" y="168" font-size="26" font-weight="800" fill="#2b1e14">New item</text>
+
+  <!-- Card: basics -->
+  <rect x="16" y="186" width="358" height="318" rx="14" fill="#ffffff" stroke="#e5dcd0"/>
+  <g font-size="11" font-weight="700" fill="#7a6a5b" letter-spacing="1">
+    <text x="32" y="214">CATEGORY</text>
+    <text x="32" y="282">ITEM NAME</text>
+    <text x="32" y="350">DESCRIPTION (OPTIONAL)</text>
+    <text x="32" y="438">PRICE (₹)</text>
+    <text x="204" y="438">SOLD AS</text>
+  </g>
+  <g font-size="13">
+    <rect x="32" y="222" width="326" height="40" rx="10" fill="#ffffff" stroke="#e5dcd0"/><text x="44" y="247" fill="#2b1e14">Cakes</text><text x="346" y="247" fill="#7a6a5b" text-anchor="end">▾</text>
+    <rect x="32" y="290" width="326" height="40" rx="10" fill="#ffffff" stroke="#e5dcd0"/><text x="44" y="315" fill="#b9a892">e.g. Choco Truffle Cake</text>
+    <rect x="32" y="358" width="326" height="58" rx="10" fill="#ffffff" stroke="#e5dcd0"/><text x="44" y="383" fill="#b9a892">Rich Belgian chocolate sponge…</text>
+    <rect x="32" y="446" width="160" height="40" rx="10" fill="#ffffff" stroke="#e5dcd0"/><text x="44" y="471" fill="#2b1e14">450</text>
+    <rect x="204" y="446" width="154" height="40" rx="10" fill="#ffffff" stroke="#e5dcd0"/><text x="216" y="471" fill="#2b1e14">per piece</text><text x="346" y="471" fill="#7a6a5b" text-anchor="end">▾</text>
+  </g>
+
+  <!-- Card: photo -->
+  <rect x="16" y="518" width="358" height="300" rx="14" fill="#ffffff" stroke="#e5dcd0"/>
+  <text x="32" y="546" font-size="11" font-weight="700" fill="#7a6a5b" letter-spacing="1">PHOTO</text>
+  <rect x="32" y="558" width="110" height="110" rx="12" fill="#eee5d8"/>
+  <line x1="32" y1="558" x2="142" y2="668" stroke="#d6c7b2"/><line x1="142" y1="558" x2="32" y2="668" stroke="#d6c7b2"/>
+  <text x="87" y="686" font-size="11" fill="#7a6a5b" text-anchor="middle">No photo yet</text>
+  <rect x="156" y="558" width="202" height="34" rx="17" fill="#f7f4ef" stroke="#e5dcd0"/>
+  <rect x="158" y="560" width="100" height="30" rx="15" fill="#ffffff" stroke="#b4741f"/>
+  <text x="208" y="580" font-size="11" font-weight="700" fill="#b4741f" text-anchor="middle">Upload a file</text>
+  <text x="308" y="580" font-size="11" fill="#7a6a5b" text-anchor="middle">Paste a link</text>
+  <rect x="156" y="604" width="202" height="98" rx="12" fill="#fdfbf7" stroke="#b4741f" stroke-dasharray="5 4"/>
+  <text x="257" y="630" font-size="12" font-weight="700" fill="#2b1e14" text-anchor="middle">Choose a photo or drag it here</text>
+  <text x="257" y="648" font-size="10" fill="#7a6a5b" text-anchor="middle">JPG, PNG, WebP or AVIF · up to 5 MB</text>
+  <rect x="222" y="660" width="70" height="28" rx="8" fill="#ffffff" stroke="#e5dcd0"/>
+  <text x="257" y="679" font-size="12" fill="#2b1e14" text-anchor="middle">Browse</text>
+  <rect x="32" y="760" width="180" height="34" rx="8" fill="#ffffff" stroke="#fecaca"/>
+  <text x="122" y="782" font-size="12" fill="#b91c1c" text-anchor="middle">Remove current photo</text>
+
+  <!-- Checkbox tiles -->
+  <g font-size="12">
+    <rect x="16" y="832" width="173" height="48" rx="12" fill="#ffffff" stroke="#e5dcd0"/>
+    <rect x="30" y="847" width="18" height="18" rx="4" fill="#b4741f"/><text x="58" y="861" fill="#2b1e14" font-weight="700">Vegetarian</text>
+    <rect x="201" y="832" width="173" height="48" rx="12" fill="#ffffff" stroke="#e5dcd0"/>
+    <rect x="215" y="847" width="18" height="18" rx="4" fill="#b4741f"/><text x="243" y="861" fill="#2b1e14" font-weight="700">Eggless</text>
+    <rect x="16" y="890" width="173" height="48" rx="12" fill="#ffffff" stroke="#e5dcd0"/>
+    <rect x="30" y="905" width="18" height="18" rx="4" fill="#ffffff" stroke="#e5dcd0"/><text x="58" y="919" fill="#2b1e14" font-weight="700">Bestseller (★)</text>
+    <rect x="201" y="890" width="173" height="64" rx="12" fill="#ffffff" stroke="#e5dcd0"/>
+    <rect x="215" y="905" width="18" height="18" rx="4" fill="#b4741f"/><text x="243" y="919" fill="#2b1e14" font-weight="700">Available today</text>
+    <text x="243" y="938" font-size="10" fill="#7a6a5b">Off = shows Sold out</text>
+  </g>
+
+  <!-- Sizes -->
+  <rect x="16" y="968" width="358" height="210" rx="14" fill="#ffffff" stroke="#e5dcd0"/>
+  <text x="32" y="996" font-size="11" font-weight="700" fill="#7a6a5b" letter-spacing="1">SIZES / VARIANTS (OPTIONAL)</text>
+  <text x="32" y="1016" font-size="11" fill="#7a6a5b">For things sold by weight; the menu shows a price range.</text>
+  <g font-size="13">
+    <rect x="32" y="1030" width="170" height="38" rx="10" fill="#ffffff" stroke="#e5dcd0"/><text x="44" y="1054" fill="#2b1e14">500 g</text>
+    <rect x="210" y="1030" width="104" height="38" rx="10" fill="#ffffff" stroke="#e5dcd0"/><text x="222" y="1054" fill="#2b1e14">450</text>
+    <rect x="322" y="1030" width="36" height="38" rx="10" fill="#ffffff" stroke="#fecaca"/><text x="340" y="1054" fill="#b91c1c" text-anchor="middle">✕</text>
+    <rect x="32" y="1076" width="170" height="38" rx="10" fill="#ffffff" stroke="#e5dcd0"/><text x="44" y="1100" fill="#2b1e14">1 kg</text>
+    <rect x="210" y="1076" width="104" height="38" rx="10" fill="#ffffff" stroke="#e5dcd0"/><text x="222" y="1100" fill="#2b1e14">850</text>
+    <rect x="322" y="1076" width="36" height="38" rx="10" fill="#ffffff" stroke="#fecaca"/><text x="340" y="1100" fill="#b91c1c" text-anchor="middle">✕</text>
+  </g>
+  <rect x="32" y="1126" width="100" height="34" rx="8" fill="#ffffff" stroke="#e5dcd0"/>
+  <text x="82" y="1148" font-size="12" fill="#2b1e14" text-anchor="middle">+ Add size</text>
+
+  <rect x="16" y="1196" width="140" height="44" rx="10" fill="#b4741f"/>
+  <text x="86" y="1223" font-size="14" font-weight="700" fill="#ffffff" text-anchor="middle">Add item</text>
+  <rect x="166" y="1196" width="90" height="44" rx="10" fill="#ffffff" stroke="#e5dcd0"/>
+  <text x="211" y="1223" font-size="14" fill="#2b1e14" text-anchor="middle">Cancel</text>
+</svg>

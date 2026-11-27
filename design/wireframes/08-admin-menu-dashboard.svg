@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="980" viewBox="0 0 390 980" font-family="Arial, Helvetica, sans-serif">
+  <title>08 Admin · Menu (dashboard home)</title>
+  <rect width="390" height="980" fill="#f7f4ef"/>
+
+  <!-- Sticky admin header: same on every admin screen -->
+  <g id="admin-header">
+    <rect width="390" height="104" fill="#ffffff" stroke="#e5dcd0"/>
+    <text x="16" y="34" font-size="14" font-weight="800" fill="#b4741f" letter-spacing="1.5">BAKERY NAME ADMIN</text>
+    <rect x="296" y="14" width="78" height="30" rx="8" fill="#ffffff" stroke="#e5dcd0"/>
+    <text x="335" y="34" font-size="12" fill="#2b1e14" text-anchor="middle">Sign out</text>
+    <g font-size="12">
+      <rect x="16" y="60" width="56" height="30" rx="15" fill="#b4741f"/><text x="44" y="79" fill="#ffffff" text-anchor="middle" font-weight="700">Menu</text>
+      <rect x="78" y="60" width="62" height="30" rx="15" fill="#ffffff" stroke="#e5dcd0"/><text x="109" y="79" fill="#2b1e14" text-anchor="middle">Orders</text>
+      <rect x="146" y="60" width="60" height="30" rx="15" fill="#ffffff" stroke="#e5dcd0"/><text x="176" y="79" fill="#2b1e14" text-anchor="middle">Offers</text>
+      <rect x="212" y="60" width="56" height="30" rx="15" fill="#ffffff" stroke="#e5dcd0"/><text x="240" y="79" fill="#2b1e14" text-anchor="middle">Hours</text>
+      <rect x="274" y="60" width="72" height="30" rx="15" fill="#ffffff" stroke="#e5dcd0"/><text x="310" y="79" fill="#2b1e14" text-anchor="middle">Ordering</text>
+      <rect x="352" y="60" width="90" height="30" rx="15" fill="#ffffff" stroke="#e5dcd0"/><text x="362" y="79" fill="#2b1e14">Appear…</text>
+    </g>
+  </g>
+
+  <text x="16" y="150" font-size="26" font-weight="800" fill="#2b1e14">Menu</text>
+
+  <!-- Stats -->
+  <g>
+    <rect x="16" y="168" width="111" height="72" rx="14" fill="#ffffff" stroke="#e5dcd0"/>
+    <text x="28" y="192" font-size="11" fill="#7a6a5b">Categories</text><text x="28" y="224" font-size="24" font-weight="800" fill="#2b1e14">5</text>
+    <rect x="139" y="168" width="111" height="72" rx="14" fill="#ffffff" stroke="#e5dcd0"/>
+    <text x="151" y="192" font-size="11" fill="#7a6a5b">Items</text><text x="151" y="224" font-size="24" font-weight="800" fill="#2b1e14">32</text>
+    <rect x="262" y="168" width="112" height="72" rx="14" fill="#ffffff" stroke="#e5dcd0"/>
+    <text x="274" y="192" font-size="11" fill="#7a6a5b">Sold out</text><text x="274" y="224" font-size="24" font-weight="800" fill="#b91c1c">2</text>
+  </g>
+
+  <text x="16" y="276" font-size="12" font-weight="700" fill="#7a6a5b" letter-spacing="1">CATEGORIES</text>
+  <text x="16" y="296" font-size="12" fill="#7a6a5b">The order here is the order customers see. A category</text>
+  <text x="16" y="312" font-size="12" fill="#7a6a5b">with no items is hidden from them automatically.</text>
+
+  <!-- Category rows -->
+  <g id="category-row-1">
+    <rect x="16" y="328" width="358" height="104" rx="14" fill="#ffffff" stroke="#e5dcd0"/>
+    <text x="34" y="356" font-size="11" fill="#7a6a5b">▲</text><text x="34" y="376" font-size="11" fill="#7a6a5b">▼</text>
+    <text x="56" y="362" font-size="15" font-weight="700" fill="#b4741f" text-decoration="underline">Cakes</text>
+    <text x="56" y="382" font-size="12" fill="#7a6a5b">8 items · Made fresh every morning</text>
+    <g font-size="12">
+      <rect x="166" y="394" width="56" height="28" rx="8" fill="#ffffff" stroke="#e5dcd0"/><text x="194" y="412" fill="#2b1e14" text-anchor="middle">Hide</text>
+      <rect x="228" y="394" width="70" height="28" rx="8" fill="#ffffff" stroke="#e5dcd0"/><text x="263" y="412" fill="#2b1e14" text-anchor="middle">Rename</text>
+      <rect x="304" y="394" width="60" height="28" rx="8" fill="#ffffff" stroke="#fecaca"/><text x="334" y="412" fill="#b91c1c" text-anchor="middle">Delete</text>
+    </g>
+  </g>
+  <g id="category-row-2-hidden">
+    <rect x="16" y="442" width="358" height="104" rx="14" fill="#ffffff" stroke="#e5dcd0"/>
+    <text x="34" y="470" font-size="11" fill="#7a6a5b">▲</text><text x="34" y="490" font-size="11" fill="#7a6a5b">▼</text>
+    <text x="56" y="476" font-size="15" font-weight="700" fill="#b4741f" text-decoration="underline">Pastries</text>
+    <rect x="128" y="464" width="54" height="18" rx="4" fill="#eeeae4"/><text x="155" y="477" font-size="9" font-weight="700" fill="#7a6a5b" text-anchor="middle">HIDDEN</text>
+    <text x="56" y="496" font-size="12" fill="#7a6a5b">10 items</text>
+    <g font-size="12">
+      <rect x="166" y="508" width="56" height="28" rx="8" fill="#ffffff" stroke="#e5dcd0"/><text x="194" y="526" fill="#2b1e14" text-anchor="middle">Show</text>
+      <rect x="228" y="508" width="70" height="28" rx="8" fill="#ffffff" stroke="#e5dcd0"/><text x="263" y="526" fill="#2b1e14" text-anchor="middle">Rename</text>
+      <rect x="304" y="508" width="60" height="28" rx="8" fill="#ffffff" stroke="#fecaca"/><text x="334" y="526" fill="#b91c1c" text-anchor="middle">Delete</text>
+    </g>
+  </g>
+  <g id="category-row-3-delete-confirm">
+    <rect x="16" y="556" width="358" height="190" rx="14" fill="#fff1f2" stroke="#fecaca"/>
+    <text x="32" y="584" font-size="14" font-weight="700" fill="#2b1e14">Delete "Breads"?</text>
+    <text x="32" y="604" font-size="12" fill="#7a6a5b">It holds 6 items. Move them somewhere else,</text>
+    <text x="32" y="620" font-size="12" fill="#7a6a5b">or delete them along with the category.</text>
+    <text x="32" y="644" font-size="11" font-weight="700" fill="#7a6a5b">MOVE ITEMS TO</text>
+    <rect x="32" y="652" width="160" height="34" rx="8" fill="#ffffff" stroke="#e5dcd0"/><text x="44" y="674" font-size="12" fill="#2b1e14">Snacks ▾</text>
+    <rect x="200" y="652" width="160" height="34" rx="8" fill="#ffffff" stroke="#e5dcd0"/><text x="280" y="674" font-size="11" fill="#2b1e14" text-anchor="middle">Move &amp; delete category</text>
+    <rect x="32" y="698" width="230" height="34" rx="8" fill="#ffffff" stroke="#fecaca"/><text x="147" y="720" font-size="11" fill="#b91c1c" text-anchor="middle">Delete category and its 6 items</text>
+    <rect x="270" y="698" width="90" height="34" rx="8" fill="#ffffff" stroke="#e5dcd0"/><text x="315" y="720" font-size="12" fill="#2b1e14" text-anchor="middle">Cancel</text>
+  </g>
+
+  <!-- New category -->
+  <rect x="16" y="766" width="150" height="42" rx="10" fill="#b4741f"/>
+  <text x="91" y="792" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">+ New category</text>
+
+  <text x="16" y="850" font-size="12" fill="#7a6a5b">Want to see what customers see?</text>
+  <text x="212" y="850" font-size="12" fill="#b4741f" text-decoration="underline">Open the phone preview</text>
+  <text x="195" y="940" font-size="11" fill="#7a6a5b" text-anchor="middle">Version 60addc7</text>
+</svg>
