@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="844" viewBox="0 0 390 844" font-family="Arial, Helvetica, sans-serif">
+  <title>02 Customer · Item details sheet</title>
+  <rect width="390" height="844" fill="#fdf6ec"/>
+  <!-- Dimmed menu behind; tap to close -->
+  <rect width="390" height="844" fill="#3a2418" opacity="0.55"/>
+
+  <!-- Bottom sheet (centred window on desktop) -->
+  <rect x="0" y="96" width="390" height="760" rx="24" fill="#ffffff"/>
+  <rect x="175" y="108" width="40" height="5" rx="2.5" fill="#eaddc9"/>
+
+  <rect x="16" y="128" width="358" height="268" rx="16" fill="#eee5d8"/>
+  <line x1="16" y1="128" x2="374" y2="396" stroke="#d6c7b2"/><line x1="374" y1="128" x2="16" y2="396" stroke="#d6c7b2"/>
+
+  <rect x="16" y="418" width="14" height="14" fill="none" stroke="#15803d" stroke-width="1.5"/><circle cx="23" cy="425" r="3.5" fill="#15803d"/>
+  <text x="38" y="432" font-size="21" font-weight="800" fill="#3a2418">Choco Truffle Cake</text>
+
+  <g font-size="11" font-weight="700">
+    <rect x="16" y="446" width="44" height="22" rx="11" fill="#dcfce7"/><text x="38" y="461" fill="#15803d" text-anchor="middle">Veg</text>
+    <rect x="66" y="446" width="64" height="22" rx="11" fill="#dcfce7"/><text x="98" y="461" fill="#15803d" text-anchor="middle">Eggless</text>
+    <rect x="136" y="446" width="92" height="22" rx="11" fill="#fef3c7"/><text x="182" y="461" fill="#92400e" text-anchor="middle">★ Bestseller</text>
+  </g>
+
+  <text x="16" y="494" font-size="13" fill="#8a7663">Rich Belgian chocolate sponge layered</text>
+  <text x="16" y="512" font-size="13" fill="#8a7663">with truffle cream.</text>
+
+  <!-- Prices -->
+  <rect x="16" y="530" width="358" height="92" rx="12" fill="#ffffff" stroke="#eaddc9"/>
+  <text x="32" y="561" font-size="14" fill="#3a2418">500 g</text>
+  <text x="358" y="561" font-size="14" font-weight="700" fill="#3a2418" text-anchor="end">₹450</text>
+  <line x1="32" y1="576" x2="358" y2="576" stroke="#eaddc9"/>
+  <text x="32" y="604" font-size="14" fill="#3a2418">1 kg</text>
+  <text x="358" y="604" font-size="14" font-weight="700" fill="#3a2418" text-anchor="end">₹850</text>
+
+  <!-- Actions -->
+  <rect x="16" y="642" width="358" height="48" rx="24" fill="#25D366"/>
+  <text x="195" y="671" font-size="14" font-weight="700" fill="#ffffff" text-anchor="middle">Ask about this on WhatsApp</text>
+  <rect x="16" y="700" width="358" height="48" rx="24" fill="#ffffff" stroke="#b4741f" stroke-width="1.5"/>
+  <text x="195" y="729" font-size="14" font-weight="700" fill="#b4741f" text-anchor="middle">Call the shop</text>
+  <rect x="16" y="758" width="358" height="44" rx="22" fill="#ffffff" stroke="#eaddc9"/>
+  <text x="195" y="785" font-size="14" fill="#3a2418" text-anchor="middle">Close</text>
+</svg>
