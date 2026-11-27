@@ -1,0 +1,42 @@
+name: Deploy to Oracle
+
+# After every merge to main, the Oracle server pulls main and rebuilds
+# (deploy/oracle/deploy.sh). Pull requests into main already passed CI.
+#
+# Off until the server exists: in GitHub → Settings → Secrets and variables →
+# Actions, add the variable ORACLE_DEPLOY = on, plus the secrets below
+# (deploy/oracle/README.md, step 7).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# One deploy at a time; a newer merge waits for the one in progress.
+concurrency:
+  group: deploy-oracle
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy main to the Oracle server
+    if: vars.ORACLE_DEPLOY == 'on'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Deploy over SSH
+        env:
+          SSH_KEY: ${{ secrets.ORACLE_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.ORACLE_KNOWN_HOSTS }}
+          HOST: ${{ secrets.ORACLE_HOST }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          # Pinned host key: refuse to deploy to anything pretending to be the server.
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          # On the server this key may only run deploy.sh (see the README), so
+          # the command here is ignored and cannot be anything else.
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes "ubuntu@$HOST" deploy
