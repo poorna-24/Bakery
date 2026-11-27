@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import {
+  CLEANUP_AGES,
   PERIODS,
   STATUS_LABELS,
   byHour,
   byMode,
+  cleanupCutoff,
   effectiveStatus,
   isOpen,
   isPeriod,
@@ -12,12 +14,14 @@ import {
   startOfShopDay,
   summarize,
   topItems,
+  type CleanupAge,
   type OrderStatus,
 } from "@/lib/orders";
 import Shell from "@/components/admin/Shell";
 import OrderCard from "@/components/admin/OrderCard";
 import OrdersSummary from "@/components/admin/OrdersSummary";
 import AutoRefresh from "@/components/admin/AutoRefresh";
+import OrderCleanup from "@/components/admin/OrderCleanup";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +46,16 @@ export default async function OrdersPage({
     include: { lines: true },
     orderBy: { createdAt: "desc" },
   });
+
+  // How many orders each "older than" choice in the clean-up panel would delete.
+  const oldCounts = Object.fromEntries(
+    await Promise.all(
+      (Object.keys(CLEANUP_AGES) as CleanupAge[]).map(
+        async (age) =>
+          [age, await prisma.order.count({ where: { createdAt: { lt: cleanupCutoff(age, now) } } })] as const,
+      ),
+    ),
+  ) as Record<CleanupAge, number>;
 
   const rows = orders.map((order) => ({ order, status: effectiveStatus(order, todayStart) }));
   const matches = (status: OrderStatus, which: View) =>
@@ -114,6 +128,8 @@ export default async function OrdersPage({
           ))
         )}
       </div>
+
+      <OrderCleanup counts={oldCounts} />
     </Shell>
   );
 }

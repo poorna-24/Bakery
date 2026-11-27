@@ -28,7 +28,7 @@ const { prisma } = vi.hoisted(() => ({
     },
     itemVariant: { deleteMany: vi.fn() },
     setting: { findUnique: vi.fn(), upsert: vi.fn(), deleteMany: vi.fn() },
-    order: { update: vi.fn() },
+    order: { update: vi.fn(), deleteMany: vi.fn() },
     $transaction: vi.fn(),
   },
 }));
@@ -1210,6 +1210,30 @@ describe("setOrderPaid", () => {
   });
 });
 
+describe("deleteOldOrders", () => {
+  it("deletes every order older than the chosen age and says how many", async () => {
+    vi.useFakeTimers({ now: new Date("2026-11-27T07:56:00Z"), toFake: ["Date"] });
+    prisma.order.deleteMany.mockResolvedValue({ count: 42 });
+
+    const deleted = await actions.deleteOldOrders(form({ age: "1y" }));
+
+    expect(deleted).toBe(42);
+    expect(prisma.order.deleteMany).toHaveBeenCalledWith({
+      where: { createdAt: { lt: new Date("2025-11-26T18:30:00.000Z") } },
+    });
+    expect(revalidatePath).toHaveBeenCalledWith("/admin/orders");
+    vi.useRealTimers();
+  });
+
+  it.each([
+    ["an unknown age", { age: "1d" }],
+    ["no age", {}],
+  ])("deletes nothing for %s", async (_, fields) => {
+    expect(await actions.deleteOldOrders(form(fields))).toBe(0);
+    expect(prisma.order.deleteMany).not.toHaveBeenCalled();
+  });
+});
+
 // ------------------------------------------------------------------- security
 
 describe("every action needs the signed-in owner", () => {
@@ -1222,6 +1246,7 @@ describe("every action needs the signed-in owner", () => {
       [
         "createCategory",
         "createItem",
+        "deleteOldOrders",
         "deleteCategory",
         "deleteItem",
         "moveCategory",

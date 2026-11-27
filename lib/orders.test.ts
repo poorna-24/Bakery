@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { MenuItem } from "./types";
 import {
+  CLEANUP_AGES,
   MAX_LINES,
+  cleanupCutoff,
+  isCleanupAge,
   byHour,
   byMode,
   effectiveStatus,
@@ -308,5 +311,23 @@ describe("the analysis", () => {
     expect(hours[10]).toBe(1);
     expect(hours[13]).toBe(2);
     expect(hours.reduce((a, b) => a + b, 0)).toBe(3);
+  });
+});
+
+describe("old-order clean-up ages", () => {
+  it("accepts only the listed ages", () => {
+    expect(Object.keys(CLEANUP_AGES).every(isCleanupAge)).toBe(true);
+    expect(isCleanupAge("1y")).toBe(true);
+    expect(isCleanupAge("5y")).toBe(false);
+    expect(isCleanupAge("toString")).toBe(false);
+  });
+
+  it("cuts off at the start of the shop day that far back", () => {
+    const now = new Date("2026-11-27T07:56:00Z"); // 1:26 pm in India
+    expect(cleanupCutoff("1y", now)).toEqual(startOfShopDay(now, 365));
+    expect(cleanupCutoff("1y", now).toISOString()).toBe("2025-11-26T18:30:00.000Z");
+    expect(cleanupCutoff("3m", now)).toEqual(startOfShopDay(now, 91));
+    expect(cleanupCutoff("6m", now)).toEqual(startOfShopDay(now, 182));
+    expect(cleanupCutoff("2y", now)).toEqual(startOfShopDay(now, 730));
   });
 });

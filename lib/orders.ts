@@ -229,6 +229,21 @@ export function periodStart(period: Period, now: Date): Date {
   return startOfShopDay(now, period === "today" ? 0 : period === "7d" ? 6 : 29);
 }
 
+/** How old an order must be before the owner can clear it out in bulk. */
+export const CLEANUP_AGES = { "3m": "3 months", "6m": "6 months", "1y": "1 year", "2y": "2 years" } as const;
+export type CleanupAge = keyof typeof CLEANUP_AGES;
+
+const CLEANUP_DAYS: Record<CleanupAge, number> = { "3m": 91, "6m": 182, "1y": 365, "2y": 730 };
+
+export function isCleanupAge(value: string): value is CleanupAge {
+  return Object.prototype.hasOwnProperty.call(CLEANUP_AGES, value);
+}
+
+/** Orders placed before this moment are "older than" the age: whole shop days, counted back from today. */
+export function cleanupCutoff(age: CleanupAge, now: Date): Date {
+  return startOfShopDay(now, CLEANUP_DAYS[age]);
+}
+
 /** The hour of day at the shop, 0–23. */
 export function shopHour(at: Date, timeZone = SHOP_TIME_ZONE): number {
   return partsIn(at, timeZone).hour;
