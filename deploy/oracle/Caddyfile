@@ -1,0 +1,10 @@
+# Caddy fetches and renews a free Let's Encrypt certificate for DOMAIN by
+# itself, and sends plain http:// visitors to https://.
+{$DOMAIN} {
+	encode zstd gzip
+
+	reverse_proxy app:3000 {
+		# The address the order and login limits count by (lib/rateLimit.ts).
+		header_up X-Real-IP {remote_host}
+	}
+}

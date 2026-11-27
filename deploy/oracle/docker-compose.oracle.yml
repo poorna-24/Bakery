@@ -1,0 +1,36 @@
+# Production on an Oracle Cloud server: the same app and Postgres database as
+# docker-compose.yml, with Caddy in front for HTTPS — and nothing but Caddy
+# reachable from the internet. Run through deploy.sh, which does:
+#
+#   docker compose -f docker-compose.yml -f deploy/oracle/docker-compose.oracle.yml up -d --build
+
+services:
+  db:
+    # Never published on a public server: only the app reaches it, inside Docker.
+    ports: !reset []
+
+  app:
+    # Reached through Caddy only, never directly on port 3000.
+    ports: !reset []
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in .env - your domain, or <ip-with-dashes>.sslip.io}
+    volumes:
+      - ./deploy/oracle/Caddyfile:/etc/caddy/Caddyfile:ro
+      # The HTTPS certificates: kept across restarts so Let's Encrypt is not asked again.
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      app:
+        condition: service_healthy
+
+volumes:
+  caddy-data:
+  caddy-config:
